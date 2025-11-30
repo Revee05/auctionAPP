@@ -1,0 +1,115 @@
+### ==============================================
+### AUTH - Cookie-based (minim scroll, pakai variabel)
+### ==============================================
+
+@env = local
+@baseUrl = http://localhost:3000
+
+# Kredensial siap pakai (ubah di sini saja)
+@superEmail = superadmin1@example.com
+@superPass = password123
+@adminEmail = admin@example.com
+@adminPass = admin123
+@artistEmail = artist@example.com
+@artistPass = artist123
+@collectorEmail = collector@example.com
+@collectorPass = collector123
+
+# User baru untuk uji register/login cepat
+@newName = Super Admin 1
+@newEmail = superadmin1@example.com
+@newPass = password123
+@newRole = SUPER_ADMIN
+
+### Register cepat (ubah variabel di atas jika perlu)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "{{newName}}",
+  "email": "{{newEmail}}",
+  "password": "{{newPass}}",
+  "roleName": "{{newRole}}"
+}
+
+### Login Super Admin (cookie tersimpan otomatis)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{superEmail}}",
+  "password": "{{superPass}}"
+}
+
+### Login Admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPass}}"
+}
+
+### Login Artist
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{artistEmail}}",
+  "password": "{{artistPass}}"
+}
+
+### Login Collector
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{collectorEmail}}",
+  "password": "{{collectorPass}}"
+}
+
+### Login User Baru (hasil register)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{newEmail}}",
+  "password": "{{newPass}}"
+}
+
+### Status (tanpa header)
+GET {{baseUrl}}/api/auth/status
+
+### Me (tanpa header, gunakan cookie)
+GET {{baseUrl}}/api/auth/me
+
+### Refresh (tanpa header, gunakan refresh_token cookie)
+POST {{baseUrl}}/api/auth/refresh
+
+### Logout (hapus cookies)
+POST {{baseUrl}}/api/auth/logout
+
+### Logout dari semua device (butuh access_token aktif)
+POST {{baseUrl}}/api/auth/logout-all
+
+### Fallback: Me dengan Bearer (jika perlu manual)
+@token = <PASTE_TOKEN_HERE_IF_NEEDED>
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### ==============================================
+### CARA TESTING DENGAN COOKIE (Recommended):
+### ==============================================
+### 1. Gunakan Browser atau Postman
+### 2. Login via endpoint #2-6
+### 3. Cookie otomatis tersimpan
+### 4. Akses endpoint lain (#7-12) tanpa perlu set header
+### 5. Cookie akan otomatis dikirim
+###
+### CARA TESTING DENGAN BEARER TOKEN (Fallback):
+### ==============================================
+### 1. Login via endpoint #2-6
+### 2. Buka DevTools > Application > Cookies
+### 3. Copy value dari access_token
+### 4. Paste ke @token di atas
+### 5. Gunakan endpoint #9 dengan Authorization header

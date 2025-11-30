@@ -1,0 +1,97 @@
+### ==============================================
+### ADMIN API TESTS - COOKIE-BASED
+### File: admin.rest
+### Akses: ADMIN & SUPER_ADMIN
+### ==============================================
+
+@baseUrl = http://localhost:3000
+@targetUserId = 2
+@newName = Admin Updated Name
+@newEmail = newemail@example.com
+@newPassword = newpassword123
+
+### ==============================================
+### CARA PAKAI DENGAN COOKIE (Recommended):
+### 1. Login dulu di auth.rest sebagai admin/superadmin
+### 2. Cookie otomatis tersimpan
+### 3. Langsung test endpoint di bawah tanpa set header
+###
+### CARA PAKAI DENGAN BEARER TOKEN (Fallback):
+### 1. Login dulu di auth.rest
+### 2. Copy access_token dari browser DevTools
+### 3. Paste di @adminToken di bawah
+### 4. Uncomment baris Authorization di setiap request
+### ==============================================
+
+@adminToken = <PASTE_ADMIN_TOKEN_HERE>
+
+### ==============================================
+### 1. GET ALL USERS
+### Melihat semua user
+### OPSI A: Dengan Cookie (default, uncomment jika perlu token)
+### ==============================================
+GET {{baseUrl}}/api/admin/users
+# Authorization: Bearer {{adminToken}}
+
+### ==============================================
+### 2. GET USER BY ID
+### Melihat detail user berdasarkan ID
+### Ganti ID dengan ID user yang ingin dilihat
+### ==============================================
+GET {{baseUrl}}/api/admin/users/{{targetUserId}}
+# Authorization: Bearer {{adminToken}}
+
+### ==============================================
+### 3. UPDATE USER - Ubah Nama
+### Mengedit data user
+### Ganti ID dengan ID user yang ingin diubah
+### ==============================================
+PUT {{baseUrl}}/api/admin/users/{{targetUserId}}
+# Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "{{newName}}"
+}
+
+### ==============================================
+### 4. UPDATE USER - Ubah Email
+### ==============================================
+PUT {{baseUrl}}/api/admin/users/{{targetUserId}}
+# Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "{{newEmail}}"
+}
+
+### ==============================================
+### 5. UPDATE USER - Ubah Password
+### ==============================================
+PUT {{baseUrl}}/api/admin/users/{{targetUserId}}
+# Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "password": "{{newPassword}}"
+}
+
+### ==============================================
+### 6. UPDATE USER - Ubah Semua Data
+### ==============================================
+PUT {{baseUrl}}/api/admin/users/{{targetUserId}}
+# Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "{{newName}}",
+  "email": "{{newEmail}}",
+  "password": "{{newPassword}}"
+}
+
+### ==============================================
+### CATATAN:
+### - Admin TIDAK BISA delete user
+### - Admin TIDAK BISA ubah role user
+### - Fitur tersebut hanya untuk Super Admin
+### ==============================================

@@ -1,0 +1,98 @@
+### ==============================================
+### SUPER ADMIN API TESTS - COOKIE-BASED
+### File: superadmin.rest
+### Akses: SUPER_ADMIN ONLY
+### ==============================================
+
+@baseUrl = http://localhost:3000
+@userId = 5
+@roleName = ADMIN
+
+### ==============================================
+### CARA PAKAI DENGAN COOKIE (Recommended):
+### 1. Login dulu di auth.rest sebagai superadmin
+### 2. Cookie otomatis tersimpan
+### 3. Langsung test endpoint di bawah tanpa set header
+###
+### CARA PAKAI DENGAN BEARER TOKEN (Fallback):
+### 1. Login dulu di auth.rest sebagai superadmin
+### 2. Copy access_token dari browser DevTools
+### 3. Paste di @superadminToken di bawah
+### 4. Uncomment baris Authorization di setiap request
+### ==============================================
+
+@superadminToken = <PASTE_SUPERADMIN_TOKEN_HERE>
+
+### ==============================================
+### 1. DELETE USER
+### Menghapus user dari database
+### Ganti ID dengan ID user yang ingin dihapus
+### HATI-HATI: Data akan terhapus permanen!
+### ==============================================
+DELETE {{baseUrl}}/api/superadmin/users/{{userId}}
+# Authorization: Bearer {{superadminToken}}
+
+### ==============================================
+### 2. ASSIGN ROLE - Tambah Role ADMIN ke User
+### Menambahkan role ke user
+### Ganti ID dengan ID user yang ingin diberi role
+### ==============================================
+POST {{baseUrl}}/api/superadmin/users/{{userId}}/roles
+# Authorization: Bearer {{superadminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "{{roleName}}"
+}
+
+### ==============================================
+### 3. ASSIGN ROLE - Tambah Role ARTIST ke User
+### ==============================================
+POST {{baseUrl}}/api/superadmin/users/{{userId}}/roles
+# Authorization: Bearer {{superadminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "{{roleName}}"
+}
+
+### ==============================================
+### 4. ASSIGN ROLE - Tambah Role COLLECTOR ke User
+### ==============================================
+POST {{baseUrl}}/api/superadmin/users/{{userId}}/roles
+# Authorization: Bearer {{superadminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "{{roleName}}"
+}
+
+### ==============================================
+### 5. REMOVE ROLE - Hapus Role dari User
+### Menghapus role dari user
+### Ganti ID dengan ID user yang ingin dihapus rolenya
+### ==============================================
+DELETE {{baseUrl}}/api/superadmin/users/{{userId}}/roles
+# Authorization: Bearer {{superadminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "{{roleName}}"
+}
+
+### ==============================================
+### AVAILABLE ROLES:
+### - SUPER_ADMIN
+### - ADMIN
+### - ARTIST
+### - COLLECTOR
+### ==============================================
+
+### ==============================================
+### CONTOH WORKFLOW:
+### 1. Buat user baru via auth.rest (register)
+### 2. Assign role ADMIN ke user tersebut (endpoint 2)
+### 3. User sekarang punya akses admin
+### 4. Kalau tidak perlu, hapus role (endpoint 5)
+### 5. Kalau user tidak diperlukan, delete user (endpoint 1)
+### ==============================================

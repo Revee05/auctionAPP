@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RoleName {
+  SUPER_ADMIN
+  ADMIN
+  ARTIST
+  COLLECTOR
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      RoleName  @unique
+  users     UserRole[]
+  createdAt DateTime  @default(now())
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  password      String?
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model UserRole {
+  userId     Int
+  roleId     Int
+  assignedAt DateTime @default(now())
+
+  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}

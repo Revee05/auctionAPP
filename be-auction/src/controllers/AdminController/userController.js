@@ -1,0 +1,125 @@
+import { prisma } from '../../../lib/prisma.js'
+import bcrypt from 'bcrypt'
+
+// ============================================
+// ADMIN CONTROLLER - User Management
+// Akses: ADMIN & SUPER_ADMIN
+// ============================================
+
+export const adminUserController = {
+  // =========================
+  // GET ALL USERS
+  // Akses: Admin & Super Admin
+  // =========================
+  async getAll(request, reply) {
+    try {
+      // Ambil semua user beserta role-nya
+      const users = await prisma.user.findMany({
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          updatedAt: true,
+          roles: true
+        }
+      })
+      
+      // Format agar roles berupa array string
+      const formattedUsers = users.map(user => ({
+        ...user,
+        roles: user.roles.map(ur => ur.role.name)
+      }))
+      
+      return reply.send({ users: formattedUsers })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
+  },
+
+  // =========================
+  // GET USER BY ID
+  // Akses: Admin & Super Admin
+  // =========================
+  async getById(request, reply) {
+    try {
+      const { id } = request.params
+      
+      // Cari user berdasarkan ID beserta role-nya
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          roles: {
+            include: {
+              role: true
+            }
+          }
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          updatedAt: true,
+          roles: true
+        }
+      })
+      
+      if (!user) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+      
+      // Format roles jadi array string
+      const formattedUser = {
+        ...user,
+        roles: user.roles.map(ur => ur.role.name)
+      }
+      
+      return reply.send({ user: formattedUser })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
+  },
+
+  // =========================
+  // UPDATE USER
+  // Akses: Admin & Super Admin
+  // =========================
+  async update(request, reply) {
+    try {
+      const { id } = request.params
+      const { name, email, password } = request.body
+      
+      // Siapkan data update
+      const data = {}
+      if (name) data.name = name
+      if (email) data.email = email
+      if (password) {
+        data.password = await bcrypt.hash(password, 10)
+      }
+      
+      // Update user
+      const user = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          updatedAt: true
+        }
+      })
+      
+      return reply.send({ message: 'User updated successfully', user })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
+  }
+}
