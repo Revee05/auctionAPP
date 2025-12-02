@@ -1,42 +1,51 @@
 import 'dotenv/config'
 import { prisma } from './prismaClient.js'
+import bcrypt from 'bcrypt'
 
 export async function seedUserRoles() {
   // Map user email to role name
   const userRoles = [
-    { email: 'superadmin@example.com', role: 'SUPER_ADMIN' },
-    { email: 'admin@example.com', role: 'ADMIN' },
-    { email: 'artist@example.com', role: 'ARTIST' },
-    { email: 'collector@example.com', role: 'COLLECTOR' },
-    
-    // Additional Admins
-    { email: 'admin2@example.com', role: 'ADMIN' },
-    { email: 'admin3@example.com', role: 'ADMIN' },
-    
-    // Additional Artists
-    { email: 'john.artist@example.com', role: 'ARTIST' },
-    { email: 'sarah.painter@example.com', role: 'ARTIST' },
-    { email: 'mike.sculptor@example.com', role: 'ARTIST' },
-    { email: 'emma.designer@example.com', role: 'ARTIST' },
-    { email: 'david.photo@example.com', role: 'ARTIST' },
-    { email: 'lisa.illustrator@example.com', role: 'ARTIST' },
-    { email: 'james.digital@example.com', role: 'ARTIST' },
-    { email: 'anna.ceramics@example.com', role: 'ARTIST' },
-    
-    // Additional Collectors
-    { email: 'robert.collector@example.com', role: 'COLLECTOR' },
-    { email: 'maria.artlover@example.com', role: 'COLLECTOR' },
-    { email: 'william.gallery@example.com', role: 'COLLECTOR' },
-    { email: 'patricia.museum@example.com', role: 'COLLECTOR' },
-    { email: 'richard.buyer@example.com', role: 'COLLECTOR' },
-    { email: 'jennifer.patron@example.com', role: 'COLLECTOR' },
-    { email: 'thomas.investor@example.com', role: 'COLLECTOR' },
-    { email: 'nancy.enthusiast@example.com', role: 'COLLECTOR' },
-    { email: 'daniel.connoisseur@example.com', role: 'COLLECTOR' },
-    { email: 'betty.curator@example.com', role: 'COLLECTOR' }
+    { email: 'superadmin@auctionapp.com', role: 'SUPER_ADMIN' },
+    { email: 'admin@auctionapp.com', role: 'ADMIN' },
+    { email: 'artist@auctionapp.com', role: 'ARTIST' },
+    { email: 'collector@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'admin2@auctionapp.com', role: 'ADMIN' },
+    { email: 'admin3@auctionapp.com', role: 'ADMIN' },
+    { email: 'john.artist@auctionapp.com', role: 'ARTIST' },
+    { email: 'sarah.painter@auctionapp.com', role: 'ARTIST' },
+    { email: 'mike.sculptor@auctionapp.com', role: 'ARTIST' },
+    { email: 'emma.designer@auctionapp.com', role: 'ARTIST' },
+    { email: 'david.photo@auctionapp.com', role: 'ARTIST' },
+    { email: 'lisa.illustrator@auctionapp.com', role: 'ARTIST' },
+    { email: 'james.digital@auctionapp.com', role: 'ARTIST' },
+    { email: 'anna.ceramics@auctionapp.com', role: 'ARTIST' },
+    { email: 'robert.collector@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'maria.artlover@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'william.gallery@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'patricia.museum@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'richard.buyer@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'jennifer.patron@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'thomas.investor@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'nancy.enthusiast@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'daniel.connoisseur@auctionapp.com', role: 'COLLECTOR' },
+    { email: 'betty.curator@auctionapp.com', role: 'COLLECTOR' }
   ]
+
+  // Seed users with hashed password
+  const defaultPassword = 'Password123!'
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10)
+
   for (const ur of userRoles) {
-    const user = await prisma.user.findUnique({ where: { email: ur.email } })
+    // Upsert user
+    const user = await prisma.user.upsert({
+      where: { email: ur.email },
+      update: {},
+      create: {
+        email: ur.email,
+        password: hashedPassword,
+        name: ur.email.split('@')[0], // contoh nama dari email
+      }
+    })
     const role = await prisma.role.findUnique({ where: { name: ur.role } })
     if (user && role) {
       await prisma.userRole.upsert({

@@ -6,14 +6,14 @@
 @baseUrl = http://localhost:3000
 
 # Kredensial siap pakai (ubah di sini saja)
-@superEmail = superadmin1@example.com
-@superPass = password123
-@adminEmail = admin@example.com
-@adminPass = admin123
-@artistEmail = artist@example.com
-@artistPass = artist123
-@collectorEmail = collector@example.com
-@collectorPass = collector123
+@superEmail = superadmin@auctionapp.com
+@superPass = Password123!
+@adminEmail = admin@auctionapp.com
+@adminPass = Password123!
+@artistEmail = mike.sculptor@auctionapp.com
+@artistPass = Password123!
+@collectorEmail = robert.collector@auctionapp.com
+@collectorPass = Password123!
 
 # User baru untuk uji register/login cepat
 @newName = Super Admin 1
