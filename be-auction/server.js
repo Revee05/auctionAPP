@@ -1,9 +1,9 @@
 import Fastify from 'fastify'
 import fastifyCookie from '@fastify/cookie'
-import 'dotenv/config'
 import { authRoutes } from './src/routes/authRoutes.js'
-import { adminUserRoutes } from './src/routes/admin/userRoutes.js'
-import { superAdminUserRoutes } from './src/routes/superadmin/userRoutes.js'
+import { adminUserRoutes } from './src/routes/admin/AdminRoutes.js'
+import { superAdminUserRoutes } from './src/routes/superadmin/SuperAdminRoutes.js'
+import 'dotenv/config'
 
 const fastify = Fastify({ logger: true })
 

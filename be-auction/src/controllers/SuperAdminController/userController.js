@@ -98,5 +98,34 @@ export const superAdminUserController = {
     } catch (error) {
       return reply.status(500).send({ error: error.message })
     }
+  },
+
+  // =========================
+  // LIST ALL USERS
+  // Akses: Super Admin Only
+  // =========================
+  async list(request, reply) {
+    try {
+      const users = await prisma.user.findMany({
+        include: {
+          roles: {
+            include: { role: true }
+          }
+        }
+      })
+
+      // Format agar roles berupa array nama role
+      const formattedUsers = users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        roles: user.roles.map(ur => ur.role.name)
+      }))
+
+      return reply.send({ users: formattedUsers })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
   }
 }

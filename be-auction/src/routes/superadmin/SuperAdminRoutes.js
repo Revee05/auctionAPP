@@ -21,4 +21,7 @@ export async function superAdminUserRoutes(fastify, options) {
   
   // DELETE /api/superadmin/users/:userId/roles - Remove role from user
   fastify.delete('/:userId/roles', superAdminUserController.removeRole)
+  
+  // GET /api/superadmin/users - List all users
+  fastify.get('/', superAdminUserController.list)
 }

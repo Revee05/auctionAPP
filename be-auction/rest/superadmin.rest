@@ -5,7 +5,7 @@
 ### ==============================================
 
 @baseUrl = http://localhost:3000
-@userId = 5
+@userId = 51
 @roleName = ADMIN
 
 ### ==============================================
@@ -79,6 +79,13 @@ Content-Type: application/json
 {
   "roleName": "{{roleName}}"
 }
+
+### ==============================================
+### 6. LIST ALL USERS
+### Melihat daftar seluruh user beserta roles-nya
+### ==============================================
+GET {{baseUrl}}/api/superadmin/users
+# Authorization: Bearer {{superadminToken}}
 
 ### ==============================================
 ### AVAILABLE ROLES:
