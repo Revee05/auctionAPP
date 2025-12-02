@@ -50,8 +50,8 @@ export const authController = {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
-        // maxAge: 15 * 60 * 1000, // 15 menit
-        maxAge:  20// 20 detik (untuk testing)
+        maxAge: 15 * 60 * 1000, // 15 menit
+        // maxAge:  20// 20 detik (untuk testing)
       })
 
       // Set refresh token di HTTP-only cookie
@@ -91,8 +91,8 @@ export const authController = {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
-        // maxAge: 15 * 60 * 1000, // 15 menit
-        maxAge:  20// 20 detik (untuk testing)
+        maxAge: 15 * 60 * 1000, // 15 menit
+        // maxAge:  20// 20 detik (untuk testing)
       })
       
       return reply.send({ 

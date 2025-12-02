@@ -62,10 +62,10 @@ export default function Home() {
               Documentation
             </a>
           </Button>
-            {/* Button shadcn/ui baru */}
-            <Button variant="destructive" className="w-full md:w-[158px]">
-              Tombol Baru
-            </Button>
+          {/* Button shadcn/ui baru */}
+          <Button variant="destructive" className="w-full md:w-[158px]">
+            Tombol Baru
+          </Button>
         </div>
       </main>
     </div>
