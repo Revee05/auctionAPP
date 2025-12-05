@@ -95,10 +95,10 @@ function Header() {
         ) : (
           <>
             <Link href="/auth/login">
-              <Button variant="ghost" className="mr-2">Login</Button>
+              <Button variant="ghost" className="mr-2 cursor-pointer">Login</Button>
             </Link>
             <Link href="/auth/register">
-              <Button>Register</Button>
+              <Button variant="secondary" size="lg" className="cursor-pointer">Register</Button>
             </Link>
           </>
         )}
