@@ -45,11 +45,11 @@ export default function LoginPage() {
 
       // Redirect berdasarkan role
       if (data.user.roles.includes("SUPER_ADMIN")) {
-        router.push("/admin");
+        router.push("/");
       } else if (data.user.roles.includes("ARTIST")) {
-        router.push("/my-art");
+        router.push("/");
       } else if (data.user.roles.includes("COLLECTOR")) {
-        router.push("/my-bids");
+        router.push("/");
       } else {
         router.push("/");
       }

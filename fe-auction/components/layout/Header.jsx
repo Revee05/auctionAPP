@@ -6,9 +6,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
+
 function Header() {
   const { user, role, setUser, setRole } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // helper: cek role dari role (string) atau user.roles (array)
+  const hasRole = (r) => {
+    if (!r) return false;
+    if (role && typeof role === "string" && role.toLowerCase() === r.toLowerCase()) return true;
+    if (Array.isArray(user?.roles)) {
+      return user.roles.some((x) => String(x).toLowerCase() === r.toLowerCase());
+    }
+    return false;
+  };
 
   // Simulasi logout
   const handleLogout = () => {
@@ -18,7 +30,7 @@ function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-zinc-900 text-white w-full relative sticky top-0 z-50 shadow">
+    <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white w-full relative sticky top-0 z-0 shadow-2xl backdrop-blur-sm backdrop-saturate-150 border-b border-zinc-800">
       {/* Kiri: Logo */}
       <div className="flex items-center gap-2">
         <div className="rounded-lg bg-purple-400 w-8 h-8" />
@@ -36,13 +48,10 @@ function Header() {
           <span>Reels</span>
         </Link>
         {/* RBAC: Navigasi khusus role */}
-        {role === "superadmin" && (
-          <Link href="/admin" className="hover:underline">Admin Panel</Link>
-        )}
-        {role === "artist" && (
+        {hasRole("artist") && (
           <Link href="/my-art" className="hover:underline">My Art</Link>
         )}
-        {role === "collector" && (
+        {hasRole("collector") && (
           <Link href="/my-bids" className="hover:underline">My Bids</Link>
         )}
       </nav>
@@ -71,13 +80,21 @@ function Header() {
                 </span>
               </div>
               <DropdownMenuSeparator />
-              {(Array.isArray(user.roles) && (user.roles.includes("SUPER_ADMIN") || user.roles.includes("ADMIN"))) ? (
-                <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
-                  <Link href="/dashboard" className="flex items-center gap-2 w-full text-zinc-200">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
+              {Array.isArray(user.roles) && (user.roles.includes("SUPER_ADMIN") || user.roles.includes("ADMIN")) ? (
+                <>
+                  <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
+                    <Link href="/dashboard" className="flex items-center gap-2 w-full text-zinc-200">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
+                    <Link href="/profile" className="flex items-center gap-2 w-full text-zinc-200">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                </>
               ) : (
                 <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
                   <Link href="/profile" className="flex items-center gap-2 w-full text-zinc-200">
@@ -98,52 +115,103 @@ function Header() {
               <Button variant="ghost" className="mr-2 cursor-pointer">Login</Button>
             </Link>
             <Link href="/auth/register">
-              <Button variant="secondary" size="lg" className="cursor-pointer">Register</Button>
+              <Button variant="ghost" className="cursor-pointer">Register</Button>
             </Link>
           </>
         )}
       </div>
-      {/* Hamburger menu button (mobile only) */}
-      <Button
-        className="md:hidden flex items-center justify-center p-2 rounded focus:outline-none focus:ring-2 focus:ring-purple-400 ml-2"
-        onClick={() => setMenuOpen((v) => !v)}
-        aria-label="Open menu"
-      >
-        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </Button>
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="absolute top-full left-0 w-full bg-zinc-900 border-t border-zinc-800 flex flex-col gap-2 py-4 z-50 md:hidden animate-fade-in">
-          <nav className="flex flex-col gap-2 px-4">
-            <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-              <Link href="/">Home</Link>
-            </Button>
-            <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-              <Link href="/auctions">Auctions</Link>
-            </Button>
-            <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-              <Link href="/reels">Reels</Link>
-            </Button>
-            {role === "superadmin" && (
-              <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-                <Link href="/admin">Admin Panel</Link>
-              </Button>
+      {/* Mobile: gunakan Sheet (muncul dari kanan) */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button
+            className="md:hidden flex items-center justify-center p-2 rounded-lg bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border border-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 ml-2 shadow-2xl"
+            aria-label="Open menu"
+          >
+            <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-72 md:hidden bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border-l border-zinc-800 p-4 backdrop-blur-sm shadow-2xl rounded-l-lg">
+          {/* Top: user or auth actions */}
+          <div className="flex items-center gap-3 px-1">
+            {user ? (
+              <Link href="/profile" className="flex items-center gap-3 w-full">
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+                    <AvatarFallback className="text-lg bg-zinc-800 text-zinc-300">{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col text-left">
+                    <span className="font-semibold text-sm text-white truncate">{user.name}</span>
+                    <span className="text-xs text-zinc-400 truncate">{user.email}</span>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex gap-2 w-full">
+                <Link href="/auth/login" className="w-1/2">
+                  <Button variant="outline" className="w-full">Login</Button>
+                </Link>
+                <Link href="/auth/register" className="w-1/2">
+                  <Button className="w-full">Register</Button>
+                </Link>
+              </div>
             )}
-            {role === "artist" && (
-              <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-                <Link href="/my-art">My Art</Link>
-              </Button>
+          </div>
+
+          <div className="my-3 border-t border-zinc-800/60" />
+
+          <nav className="flex flex-col gap-1">
+            <SheetClose asChild>
+              <Link href="/" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
+                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" /></svg>
+                <span className="text-sm text-white">Home</span>
+              </Link>
+            </SheetClose>
+
+            <SheetClose asChild>
+              <Link href="/auctions" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
+                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+                <span className="text-sm text-white">Auctions</span>
+              </Link>
+            </SheetClose>
+
+            <SheetClose asChild>
+              <Link href="/reels" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
+                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h.01M4 12h.01M4 18h.01" /></svg>
+                <span className="text-sm text-white">Reels</span>
+              </Link>
+            </SheetClose>
+
+            {hasRole("artist") && (
+              <SheetClose asChild>
+                <Link href="/my-art" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
+                  <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" /></svg>
+                  <span className="text-sm text-white">My Art</span>
+                </Link>
+              </SheetClose>
             )}
-            {role === "collector" && (
-              <Button variant="ghost" className="justify-start" asChild onClick={() => setMenuOpen(false)}>
-                <Link href="/my-bids">My Bids</Link>
-              </Button>
+
+            {hasRole("collector") && (
+              <SheetClose asChild>
+                <Link href="/my-bids" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
+                  <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-2.21 0-4 1.79-4 4v4h8v-4c0-2.21-1.79-4-4-4z" /></svg>
+                  <span className="text-sm text-white">My Bids</span>
+                </Link>
+              </SheetClose>
             )}
           </nav>
-        </div>
-      )}
+
+          <div className="mt-4 border-t border-zinc-800/60 pt-3 text-xs text-zinc-400 px-1">
+            <div className="flex items-center justify-between">
+              <span>Theme</span>
+              <span className="text-zinc-300">Dark</span>
+            </div>
+            <div className="mt-3 text-center text-zinc-500">© {new Date().getFullYear()} ArtAuction</div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }
