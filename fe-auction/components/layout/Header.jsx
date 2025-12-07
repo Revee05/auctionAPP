@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
+import { LogIn } from "lucide-react";
 
 function Header() {
   const { user, role, setUser, setRole } = useAuth();
@@ -110,21 +111,19 @@ function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <>
-            <Link href="/auth/login">
-              <Button variant="ghost" className="mr-2 cursor-pointer">Login</Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button variant="ghost" className="cursor-pointer">Register</Button>
-            </Link>
-          </>
+          <Link href="/auth/login">
+            <Button variant="ghost" className="p-2 mr-2" aria-label="Login" title="Login">
+              <LogIn className="w-5 h-5" />
+            </Button>
+          </Link>
         )}
       </div>
       {/* Mobile: gunakan Sheet (muncul dari kanan) */}
       <Sheet>
         <SheetTrigger asChild>
           <Button
-            className="md:hidden flex items-center justify-center p-2 rounded-lg bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border border-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 ml-2 shadow-2xl"
+            variant="ghost"
+            className="md:hidden flex items-center justify-center p-2 ml-2 hover:bg-transparent focus:ring-0"
             aria-label="Open menu"
           >
             <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,13 +148,12 @@ function Header() {
                 </div>
               </Link>
             ) : (
-              <div className="flex gap-2 w-full">
-                <Link href="/auth/login" className="w-1/2">
-                  <Button variant="outline" className="w-full">Login</Button>
-                </Link>
-                <Link href="/auth/register" className="w-1/2">
-                  <Button className="w-full">Register</Button>
-                </Link>
+              <div className="w-full">
+                {/* Login tidak ditampilkan di sheet — tetap di header kanan */}
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-purple-400 w-8 h-8" />
+                  <span className="font-bold text-lg text-white">ArtAuction</span>
+                </div>
               </div>
             )}
           </div>
