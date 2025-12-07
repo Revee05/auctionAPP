@@ -10,8 +10,12 @@ const fastify = Fastify({ logger: true })
 
 
 // Register CORS agar bisa diakses dari frontend
+// Configure CORS to reflect the request origin (allows all origins).
+// This is equivalent to allowing any origin while still sending a
+// matching `Access-Control-Allow-Origin` header (required when
+// `credentials: true` is used).
 fastify.register(fastifyCors, {
-  origin: process.env.CORS_ORIGIN || true, // ganti dengan URL FE jika perlu
+  origin: true,
   credentials: true
 });
 
