@@ -2,15 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 
-const THEME_KEY = "theme"; // values: 'dark' | 'light' | 'system'
+const THEME_KEY = "theme"; // values: 'dark' | 'light'
 
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
     try {
       const v = localStorage.getItem(THEME_KEY);
-      return v || "system";
+      return v === "dark" || v === "light" ? v : "light";
     } catch (e) {
-      return "system";
+      return "light";
     }
   });
 
@@ -22,57 +22,30 @@ export function useTheme() {
   useEffect(() => {
     let mql;
 
-    const resolveSystem = () => {
-      try {
-        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      } catch (e) {
-        return false;
-      }
-    };
-
-    const apply = () => {
-      if (theme === "dark") applyDark(true);
-      else if (theme === "light") applyDark(false);
-      else applyDark(resolveSystem());
-    };
-
-    apply();
-
-    if (theme === "system") {
-      try {
-        mql = window.matchMedia("(prefers-color-scheme: dark)");
-        const handler = (e) => applyDark(e.matches);
-        if (mql?.addEventListener) mql.addEventListener("change", handler);
-        else if (mql?.addListener) mql.addListener(handler);
-        return () => {
-          if (mql?.removeEventListener) mql.removeEventListener("change", handler);
-          else if (mql?.removeListener) mql.removeListener(handler);
-        };
-      } catch (e) {
-        // ignore
-      }
-    }
-    // no cleanup here beyond media listener
+    // Apply explicit dark/light only (no 'system' support)
+    if (theme === "dark") applyDark(true);
+    else applyDark(false);
     return undefined;
   }, [theme, applyDark]);
 
-  const setTheme = useCallback((value) => {
-    try {
-      localStorage.setItem(THEME_KEY, value);
-    } catch (e) {
-      // ignore
-    }
-    setThemeState(value);
+  // Accept either a value or an updater function to stay compatible with toggleTheme
+  const setTheme = useCallback((valueOrUpdater) => {
+    setThemeState((prev) => {
+      const next = typeof valueOrUpdater === "function" ? valueOrUpdater(prev) : valueOrUpdater;
+      try {
+        localStorage.setItem(THEME_KEY, next);
+      } catch (e) {
+        // ignore
+      }
+      return next;
+    });
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      return next;
-    });
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, [setTheme]);
 
-  const isDark = theme === "dark" || (theme === "system" && (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches));
+  const isDark = theme === "dark";
 
   return {
     theme,

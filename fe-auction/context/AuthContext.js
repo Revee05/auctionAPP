@@ -13,8 +13,10 @@ export function AuthProvider({ children }) {
     // Simulasi: ambil user dari localStorage atau API
     const stored = JSON.parse(localStorage.getItem("user"));
     if (stored) {
-      setUser(stored.user);
-      setRole(stored.role);
+      setTimeout(() => {
+        setUser(stored.user);
+        setRole(stored.role);
+      }, 0);
     }
   }, []);
 
