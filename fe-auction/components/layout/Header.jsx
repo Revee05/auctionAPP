@@ -2,16 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import useTheme from "@/hooks/useTheme";
 import Link from "next/link";
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
-import { LogIn } from "lucide-react";
+import { LogIn, Sun, Moon } from "lucide-react";
 
 function Header() {
   const { user, role, setUser, setRole } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme, isDark } = useTheme();
 
   // helper: cek role dari role (string) atau user.roles (array)
   const hasRole = (r) => {
@@ -58,6 +60,10 @@ function Header() {
       </nav>
       {/* Kanan: Auth (selalu tampil di kanan) */}
       <div className="flex items-center gap-2 ml-auto">
+        {/* Theme toggle */}
+        <Button variant="ghost" className="p-2" onClick={toggleTheme} aria-label="Toggle color theme" title="Toggle theme">
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </Button>
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -204,7 +210,9 @@ function Header() {
           <div className="mt-4 border-t border-zinc-800/60 pt-3 text-xs text-zinc-400 px-1">
             <div className="flex items-center justify-between">
               <span>Theme</span>
-              <span className="text-zinc-300">Dark</span>
+              <button onClick={toggleTheme} aria-label="Toggle color theme" className="p-2 rounded-lg hover:bg-zinc-800/60">
+                {isDark ? <Sun className="w-5 h-5 text-zinc-100" /> : <Moon className="w-5 h-5 text-zinc-100" />}
+              </button>
             </div>
             <div className="mt-3 text-center text-zinc-500">© {new Date().getFullYear()} ArtAuction</div>
           </div>
