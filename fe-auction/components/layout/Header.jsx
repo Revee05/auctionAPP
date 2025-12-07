@@ -33,7 +33,7 @@ function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white w-full relative sticky top-0 z-0 shadow-2xl backdrop-blur-sm backdrop-saturate-150 border-b border-zinc-800">
+    <header className={`flex items-center justify-between px-4 py-3 w-full relative sticky top-0 z-0 shadow-2xl backdrop-blur-sm backdrop-saturate-150 ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white border-b border-zinc-800' : 'bg-white/80 text-zinc-900 border-b border-zinc-200'}`}>
       {/* Kiri: Logo */}
       <div className="flex items-center gap-2">
         <div className="rounded-lg bg-purple-400 w-8 h-8" />
@@ -67,21 +67,24 @@ function Header() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="focus:outline-none">
-                <Avatar>
+              <button className="focus:outline-none cursor-pointer group hover:scale-105 hover:shadow-lg active:scale-95 transition-transform duration-150">
+                <Avatar className="transition-shadow duration-150 rounded-full group-hover:shadow-[0_0_12px_rgba(139,92,246,0.75)] group-hover:ring-2 group-hover:ring-purple-400/60">
                   <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
                   <AvatarFallback>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 p-0 rounded-xl shadow-lg border border-zinc-800 bg-zinc-900 absolute right-0">
-              <div className="px-5 pt-4 pb-3 flex flex-col items-center text-center">
+            <DropdownMenuContent
+              align="end"
+              className={`w-64 p-0 rounded-xl shadow-lg absolute right-0 ${isDark ? 'border border-zinc-800 bg-zinc-900 text-zinc-200' : 'border border-zinc-200 bg-white text-zinc-900'}`}
+            >
+                <div className={`px-5 pt-4 pb-3 flex flex-col items-center text-center ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                 <Avatar className="w-12 h-12 mb-2">
                   <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
-                  <AvatarFallback className="text-lg bg-zinc-800 text-zinc-300">{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                  <AvatarFallback className={`text-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-700'}`}>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-base text-white">{user.name}</span>
-                <span className="text-xs text-zinc-400 mb-1">{user.email}</span>
+                  <span className={`font-semibold text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}>{user.name}</span>
+                  <span className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} text-xs mb-1`}>{user.email}</span>
                 <span className="text-xs font-semibold rounded px-2 py-0.5 mb-1 bg-purple-900/60 text-purple-200 tracking-wide" style={{display:'inline-block'}}>
                   {Array.isArray(user.roles) ? user.roles[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''}
                 </span>
@@ -90,13 +93,13 @@ function Header() {
               {Array.isArray(user.roles) && (user.roles.includes("SUPER_ADMIN") || user.roles.includes("ADMIN")) ? (
                 <>
                   <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
-                    <Link href="/dashboard" className="flex items-center gap-2 w-full text-zinc-200">
+                      <Link href="/dashboard" className={`flex items-center gap-2 w-full ${isDark ? 'text-zinc-200' : 'text-zinc-900'}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
-                    <Link href="/profile" className="flex items-center gap-2 w-full text-zinc-200">
+                      <Link href="/profile" className={`flex items-center gap-2 w-full ${isDark ? 'text-zinc-200' : 'text-zinc-900'}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
                       Profile
                     </Link>
@@ -104,13 +107,13 @@ function Header() {
                 </>
               ) : (
                 <DropdownMenuItem asChild className="px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer">
-                  <Link href="/profile" className="flex items-center gap-2 w-full text-zinc-200">
+                    <Link href="/profile" className={`flex items-center gap-2 w-full ${isDark ? 'text-zinc-200' : 'text-zinc-900'}`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
                     Profile
                   </Link>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={handleLogout} className="px-5 py-3 text-red-400 hover:bg-zinc-800/80 transition rounded-none cursor-pointer flex items-center gap-2">
+                <DropdownMenuItem onClick={handleLogout} className={`px-5 py-3 hover:bg-zinc-800/80 transition rounded-none cursor-pointer flex items-center gap-2 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" /></svg>
                 Logout
               </DropdownMenuItem>
@@ -137,77 +140,80 @@ function Header() {
             </svg>
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-72 md:hidden bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border-l border-zinc-800 p-4 backdrop-blur-sm shadow-2xl rounded-l-lg">
+        <SheetContent
+          side="right"
+          className={`w-72 md:hidden p-4 backdrop-blur-sm shadow-2xl rounded-l-lg ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border-l border-zinc-800 text-white' : 'bg-white/90 border-l border-zinc-200 text-zinc-900'}`}
+        >
           {/* Top: user or auth actions */}
-          <div className="flex items-center gap-3 px-1">
+          <div className={`flex items-center gap-3 px-1 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
             {user ? (
               <Link href="/profile" className="flex items-center gap-3 w-full">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
                     <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
-                    <AvatarFallback className="text-lg bg-zinc-800 text-zinc-300">{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                    <AvatarFallback className={`text-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-700'}`}>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col text-left">
-                    <span className="font-semibold text-sm text-white truncate">{user.name}</span>
-                    <span className="text-xs text-zinc-400 truncate">{user.email}</span>
+                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'} truncate`}>{user.name}</span>
+                    <span className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'} truncate`}>{user.email}</span>
                   </div>
                 </div>
               </Link>
             ) : (
-              <div className="w-full">
+                <div className="w-full">
                 {/* Login tidak ditampilkan di sheet — tetap di header kanan */}
                 <div className="flex items-center gap-2">
                   <div className="rounded-lg bg-purple-400 w-8 h-8" />
-                  <span className="font-bold text-lg text-white">ArtAuction</span>
+                  <span className="font-bold text-lg">ArtAuction</span>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="my-3 border-t border-zinc-800/60" />
+          <div className={`${isDark ? 'my-3 border-t border-zinc-200/60' : 'my-3 border-t border-zinc-800/60'}`} />
 
           <nav className="flex flex-col gap-1">
             <SheetClose asChild>
-              <Link href="/" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
-                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" /></svg>
-                <span className="text-sm text-white">Home</span>
+              <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" /></svg>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Home</span>
               </Link>
             </SheetClose>
 
             <SheetClose asChild>
-              <Link href="/auctions" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
-                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
-                <span className="text-sm text-white">Auctions</span>
+              <Link href="/auctions" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Auctions</span>
               </Link>
             </SheetClose>
 
             <SheetClose asChild>
-              <Link href="/reels" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
-                <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h.01M4 12h.01M4 18h.01" /></svg>
-                <span className="text-sm text-white">Reels</span>
+              <Link href="/reels" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h.01M4 12h.01M4 18h.01" /></svg>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Reels</span>
               </Link>
             </SheetClose>
 
             {hasRole("artist") && (
               <SheetClose asChild>
-                <Link href="/my-art" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
-                  <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" /></svg>
-                  <span className="text-sm text-white">My Art</span>
+                <Link href="/my-art" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                  <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" /></svg>
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>My Art</span>
                 </Link>
               </SheetClose>
             )}
 
             {hasRole("collector") && (
               <SheetClose asChild>
-                <Link href="/my-bids" className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-800/60 transition">
-                  <svg className="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-2.21 0-4 1.79-4 4v4h8v-4c0-2.21-1.79-4-4-4z" /></svg>
-                  <span className="text-sm text-white">My Bids</span>
+                <Link href="/my-bids" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                  <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-2.21 0-4 1.79-4 4v4h8v-4c0-2.21-1.79-4-4-4z" /></svg>
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>My Bids</span>
                 </Link>
               </SheetClose>
             )}
           </nav>
 
-          <div className="mt-4 border-t border-zinc-800/60 pt-3 text-xs text-zinc-400 px-1">
+          <div className={`${isDark ? 'mt-4 border-t border-zinc-200/60 pt-3 text-xs text-zinc-400 px-1' : 'mt-4 border-t border-zinc-800/60 pt-3 text-xs text-zinc-500 px-1'}`}>
             <div className="flex items-center justify-between">
               <span>Theme</span>
               <button onClick={toggleTheme} aria-label="Toggle color theme" className="p-2 rounded-lg hover:bg-zinc-800/60">
