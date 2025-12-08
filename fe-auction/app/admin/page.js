@@ -11,8 +11,8 @@ import useTheme from "@/hooks/useTheme";
 import { SunMoon, LogOut as LogOutIcon } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
-import DashboardStats from "./components/DashboardStats";
-import UserManagement from "./components/UserManagement";
+import DashboardStats from "./Tab/DashboardStats";
+import UserManagement from "./Tab/UserManagement";
 import { LogOut } from "lucide-react";
 
 export default function AdminPage() {

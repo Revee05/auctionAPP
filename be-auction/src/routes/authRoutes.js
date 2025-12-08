@@ -13,5 +13,6 @@ export async function authRoutes(fastify, options) {
   
   // Protected routes
   fastify.get('/me', { preHandler: [authenticate] }, authController.me)
+  fastify.put('/profile', { preHandler: [authenticate] }, authController.updateProfile)
   fastify.get('/status', authController.status)
 }

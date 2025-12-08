@@ -172,6 +172,22 @@ export const authController = {
   },
 
   // =========================
+  // UPDATE PROFILE - Perbarui profil user saat ini
+  // =========================
+  async updateProfile(request, reply) {
+    try {
+      const userId = request.user.userId
+      const { name, avatarUrl } = request.body
+
+      const user = await authService.updateProfile(userId, { name, avatarUrl })
+
+      return reply.send({ message: 'Profile updated successfully', user })
+    } catch (error) {
+      return reply.status(400).send({ error: error.message })
+    }
+  },
+
+  // =========================
   // CHECK STATUS - Cek status login
   // =========================
   async status(request, reply) {

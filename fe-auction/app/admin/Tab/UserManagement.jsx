@@ -8,12 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search, UserPlus, Edit, Trash2, Shield, Mail, Loader2, AlertCircle } from "lucide-react";
 import apiClient from "@/lib/apiClient";
+import EditUserModal from "../components/EditUserModal";
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
-  const { hasRole } = useRole("SUPER_ADMIN");
+  const { hasRole: isSuperAdmin } = useRole("SUPER_ADMIN");
+  const { hasRole: isAdmin } = useRole("ADMIN");
 
   const [users, setUsers] = useState([]);
+  // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 5),
+  // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 4).
+  const columnCount = isSuperAdmin || isAdmin ? 5 : 4;
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +29,7 @@ export default function UserManagement() {
     setError(null);
     try {
       // Use SUPER_ADMIN endpoint if available, otherwise ADMIN endpoint
-      const endpoint = hasRole ? "/api/superadmin/users" : "/api/admin/users";
+      const endpoint = isSuperAdmin ? "/api/superadmin/users" : "/api/admin/users";
       const response = await apiClient.get(endpoint);
       
       // Transform data to match UI expectations
@@ -100,8 +105,56 @@ export default function UserManagement() {
     }
   };
 
+  const [editingUser, setEditingUser] = useState(null);
+
+  // Open modal to edit user
+  const handleEdit = (userId) => {
+    const u = users.find((x) => x.id === userId);
+    if (u) setEditingUser(u);
+  };
+
+  // Delete user (SUPER_ADMIN only). Frontend checks prevent deleting SUPER_ADMIN or self.
+  const handleDelete = async (userId, userRoles = []) => {
+    // Prevent deleting SUPER_ADMIN accounts or self from frontend
+    if (userRoles.includes('SUPER_ADMIN')) {
+      alert('Cannot delete a SUPER_ADMIN account')
+      return
+    }
+    if (currentUser?.id === userId) {
+      alert('You cannot delete your own account')
+      return
+    }
+
+    const ok = confirm('Are you sure you want to delete this user? This action cannot be undone.')
+    if (!ok) return
+
+    setIsLoading(true)
+    try {
+      const resp = await apiClient.delete(`/api/superadmin/users/${userId}`)
+      if (resp.status === 200) {
+        await fetchUsers()
+      } else {
+        alert(resp.data?.error || 'Failed to delete user')
+      }
+    } catch (err) {
+      console.error('Failed to delete user:', err)
+      alert(err.response?.data?.error || 'Failed to delete user')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <EditUserModal
+        open={Boolean(editingUser)}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onSaved={async () => {
+          setEditingUser(null);
+          await fetchUsers();
+        }}
+      />
       {/* Error Alert */}
       {error && (
         <Card className="bg-red-900/20 border-red-500 p-4">
@@ -210,7 +263,7 @@ export default function UserManagement() {
             <tbody className="divide-y divide-zinc-800">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-zinc-500">
+                  <td colSpan={columnCount} className="p-8 text-center text-zinc-500">
                     No users found
                   </td>
                 </tr>
@@ -251,7 +304,7 @@ export default function UserManagement() {
                         </span>
 
                         {/* Role assignment controls - only visible to SUPER_ADMIN */}
-                        {hasRole && (
+                        {isSuperAdmin && (
                           <div className="ml-3 flex items-center gap-2">
                             <select
                               value={user.role}
@@ -299,24 +352,36 @@ export default function UserManagement() {
                         year: "numeric",
                       })}
                     </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-600/20"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-400 hover:text-red-300 hover:bg-red-600/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
+                    {(isSuperAdmin || isAdmin) && (
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-600/20"
+                            onClick={() => handleEdit(user.id)}
+                            disabled={isLoading}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {isSuperAdmin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-600/20"
+                              onClick={() => handleDelete(user.id, user.roles)}
+                              disabled={
+                                isLoading ||
+                                (Array.isArray(user.roles) && user.roles.includes('SUPER_ADMIN')) ||
+                                currentUser?.id === user.id
+                              }
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

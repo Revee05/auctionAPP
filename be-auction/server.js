@@ -16,7 +16,13 @@ const fastify = Fastify({ logger: true })
 // `credentials: true` is used).
 fastify.register(fastifyCors, {
   origin: true,
-  credentials: true
+  credentials: true,
+  // Allow common HTTP methods including PUT for profile updates
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  // Allow headers sent by the frontend (Content-Type is required for JSON)
+  allowedHeaders: ['Content-Type','Authorization','Accept'],
+  // Ensure preflight responds correctly for older browsers
+  optionsSuccessStatus: 204
 });
 
 // Register cookie plugin untuk HTTP-only cookies

@@ -21,14 +21,6 @@ export const adminUserController = {
               role: true
             }
           }
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-          updatedAt: true,
-          roles: true
         }
       })
       
@@ -67,14 +59,6 @@ export const adminUserController = {
               role: true
             }
           }
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-          updatedAt: true,
-          roles: true
         }
       })
       
