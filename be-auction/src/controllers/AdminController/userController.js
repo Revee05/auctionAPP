@@ -14,14 +14,18 @@ export const adminUserController = {
   async getAll(request, reply) {
     try {
       // Cursor-based pagination
-      // Query params: ?limit=20&cursor=<lastId>
-      const { limit: limitQ, cursor: cursorQ } = request.query || {}
+      // Query params: ?limit=20&cursor=<cursorValue>&sortBy=id|name&sortOrder=asc|desc
+      const { limit: limitQ, cursor: cursorQ, sortBy: sortByQ, sortOrder: sortOrderQ } = request.query || {}
       let limit = parseInt(limitQ, 10)
       if (Number.isNaN(limit) || limit <= 0) limit = 20
       limit = Math.min(limit, 100)
 
       const requesterRoles = request.user?.roles || []
       const isSuperAdmin = requesterRoles.includes('SUPER_ADMIN')
+
+      // Sort configuration
+      const sortBy = sortByQ === 'name' ? 'name' : 'id'
+      const sortOrder = sortOrderQ === 'desc' ? 'desc' : 'asc'
 
       // If requester is NOT super admin, exclude SUPER_ADMIN users at DB level
       const where = {}
@@ -35,40 +39,56 @@ export const adminUserController = {
         }
       }
 
-      // Validate cursor when present: ensure cursor user exists and is allowed
-      let cursorId = null
+      // Parse cursor - cursor format depends on sortBy field
+      let cursorObj = null
       if (cursorQ) {
-        cursorId = parseInt(cursorQ, 10)
-        if (Number.isNaN(cursorId)) {
-          return reply.status(400).send({ error: 'Invalid cursor' })
-        }
-
-        if (!isSuperAdmin) {
-          const cursorUser = await prisma.user.findUnique({
-            where: { id: cursorId },
-            include: { roles: { include: { role: true } } }
-          })
-          if (!cursorUser) return reply.status(400).send({ error: 'Invalid cursor' })
-          const cursorUserRoles = cursorUser.roles.map(r => r.role.name)
-          if (cursorUserRoles.includes('SUPER_ADMIN')) {
-            return reply.status(403).send({ error: 'Access denied. Invalid cursor.' })
+        try {
+          const parsed = JSON.parse(decodeURIComponent(cursorQ))
+          if (sortBy === 'id') {
+            const cursorId = parseInt(parsed.id, 10)
+            if (Number.isNaN(cursorId)) {
+              return reply.status(400).send({ error: 'Invalid cursor' })
+            }
+            cursorObj = { id: cursorId }
+          } else {
+            // sortBy === 'name'
+            if (!parsed.name || !parsed.id) {
+              return reply.status(400).send({ error: 'Invalid cursor' })
+            }
+            cursorObj = { name: parsed.name, id: parseInt(parsed.id, 10) }
           }
+
+          // Validate cursor user exists and is allowed
+          if (!isSuperAdmin && cursorObj.id) {
+            const cursorUser = await prisma.user.findUnique({
+              where: { id: cursorObj.id },
+              include: { roles: { include: { role: true } } }
+            })
+            if (!cursorUser) return reply.status(400).send({ error: 'Invalid cursor' })
+            const cursorUserRoles = cursorUser.roles.map(r => r.role.name)
+            if (cursorUserRoles.includes('SUPER_ADMIN')) {
+              return reply.status(403).send({ error: 'Access denied. Invalid cursor.' })
+            }
+          }
+        } catch (e) {
+          return reply.status(400).send({ error: 'Invalid cursor format' })
         }
       }
 
-      // Fetch limit+1 so we can detect if there's a next page
-      // Support sorting by id ascending or descending via ?sort=asc|desc
-      const sortQ = (request.query && request.query.sort) || 'asc'
-      const sortOrder = sortQ === 'desc' ? 'desc' : 'asc'
+      // Build orderBy - for name, we need secondary sort by id for consistency
+      const orderBy = sortBy === 'name'
+        ? [{ name: sortOrder }, { id: 'asc' }]
+        : { id: sortOrder }
 
       const findOpts = {
         where,
         include: { roles: { include: { role: true } } },
-        orderBy: { id: sortOrder },
+        orderBy,
         take: limit + 1
       }
-      if (cursorId) {
-        findOpts.cursor = { id: cursorId }
+
+      if (cursorObj) {
+        findOpts.cursor = sortBy === 'id' ? { id: cursorObj.id } : { name_id: { name: cursorObj.name, id: cursorObj.id } }
         findOpts.skip = 1
       }
 
@@ -82,7 +102,16 @@ export const adminUserController = {
         roles: user.roles.map(ur => ur.role.name)
       }))
 
-      const nextCursor = hasMore ? pageItems[pageItems.length - 1].id : null
+      // Generate next cursor
+      let nextCursor = null
+      if (hasMore && pageItems.length > 0) {
+        const lastItem = pageItems[pageItems.length - 1]
+        if (sortBy === 'id') {
+          nextCursor = encodeURIComponent(JSON.stringify({ id: lastItem.id }))
+        } else {
+          nextCursor = encodeURIComponent(JSON.stringify({ name: lastItem.name, id: lastItem.id }))
+        }
+      }
 
       return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor })
     } catch (error) {

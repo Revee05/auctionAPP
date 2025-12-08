@@ -21,7 +21,8 @@ export default function UserManagement() {
   const [pages, setPages] = useState([])
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  const [sortOrder, setSortOrder] = useState('asc')
+  const [sortBy, setSortBy] = useState('id') // 'id' or 'name'
+  const [sortOrder, setSortOrder] = useState('asc') // 'asc' or 'desc'
   // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 5),
   // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 4).
   const columnCount = isSuperAdmin || isAdmin ? 5 : 4;
@@ -35,9 +36,8 @@ export default function UserManagement() {
     setError(null)
     try {
       const endpoint = isSuperAdmin ? "/api/superadmin/users" : "/api/admin/users"
-      const params = { limit: pageSize }
+      const params = { limit: pageSize, sortBy, sortOrder }
       if (cursor) params.cursor = cursor
-      if (sortOrder) params.sort = sortOrder
 
       const response = await apiClient.get(endpoint, { params })
 
@@ -83,7 +83,7 @@ export default function UserManagement() {
   useEffect(() => {
     fetchPage(null, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageSize, sortOrder, isSuperAdmin])
+  }, [pageSize, sortBy, sortOrder, isSuperAdmin])
 
   const currentUsers = pages[currentPageIndex]?.users || []
 
@@ -129,8 +129,6 @@ export default function UserManagement() {
     } catch (err) {
       console.error("Failed to assign role:", err);
       alert(err.response?.data?.error || "Failed to assign role");
-      // Revert optimistic update
-      await fetchUsers();
     }
   };
 
@@ -204,7 +202,9 @@ export default function UserManagement() {
         onClose={() => setEditingUser(null)}
         onSaved={async () => {
           setEditingUser(null);
-          await fetchUsers();
+          // Refresh current page
+          const cur = pages[currentPageIndex]?.cursor || null
+          await fetchPage(cur, false)
         }}
       />
       {/* Error Alert */}
@@ -227,7 +227,7 @@ export default function UserManagement() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-zinc-500 text-sm">Page:</label>
+            <label className="text-zinc-500 text-sm">Size:</label>
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
@@ -237,13 +237,22 @@ export default function UserManagement() {
               <option value={20}>20</option>
               <option value={50}>50</option>
             </select>
+            <label className="text-zinc-500 text-sm ml-2">Sort:</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm p-1 rounded-md border border-zinc-200 dark:border-zinc-700"
+            >
+              <option value="id">ID</option>
+              <option value="name">Name</option>
+            </select>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}
-              className="ml-2"
+              className="ml-1"
             >
-              Sort: {sortOrder.toUpperCase()}
+              {sortOrder === 'asc' ? '↑' : '↓'}
             </Button>
           </div>
           <Button
@@ -303,7 +312,7 @@ export default function UserManagement() {
             <div>
               <p className="text-zinc-400 text-xs">Active Users</p>
               <p className="text-2xl font-bold text-white">
-                {users.filter((u) => u.status === "active").length}
+                {currentUsers.filter((u) => u.status === "active").length}
               </p>
             </div>
           </div>
@@ -316,7 +325,7 @@ export default function UserManagement() {
             <div>
               <p className="text-zinc-400 text-xs">Admins</p>
               <p className="text-2xl font-bold text-white">
-                {users.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}
+                {currentUsers.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}
               </p>
             </div>
           </div>

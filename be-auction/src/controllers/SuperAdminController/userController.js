@@ -101,21 +101,72 @@ export const superAdminUserController = {
   },
 
   // =========================
-  // LIST ALL USERS
+  // LIST ALL USERS (with pagination)
   // Akses: Super Admin Only
   // =========================
   async list(request, reply) {
     try {
-      const users = await prisma.user.findMany({
+      // Cursor-based pagination
+      // Query params: ?limit=20&cursor=<cursorValue>&sortBy=id|name&sortOrder=asc|desc
+      const { limit: limitQ, cursor: cursorQ, sortBy: sortByQ, sortOrder: sortOrderQ } = request.query || {}
+      let limit = parseInt(limitQ, 10)
+      if (Number.isNaN(limit) || limit <= 0) limit = 20
+      limit = Math.min(limit, 100)
+
+      // Sort configuration
+      const sortBy = sortByQ === 'name' ? 'name' : 'id'
+      const sortOrder = sortOrderQ === 'desc' ? 'desc' : 'asc'
+
+      // Parse cursor - cursor format depends on sortBy field
+      let cursorObj = null
+      if (cursorQ) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(cursorQ))
+          if (sortBy === 'id') {
+            const cursorId = parseInt(parsed.id, 10)
+            if (Number.isNaN(cursorId)) {
+              return reply.status(400).send({ error: 'Invalid cursor' })
+            }
+            cursorObj = { id: cursorId }
+          } else {
+            // sortBy === 'name'
+            if (!parsed.name || !parsed.id) {
+              return reply.status(400).send({ error: 'Invalid cursor' })
+            }
+            cursorObj = { name: parsed.name, id: parseInt(parsed.id, 10) }
+          }
+        } catch (e) {
+          return reply.status(400).send({ error: 'Invalid cursor format' })
+        }
+      }
+
+      // Build orderBy - for name, we need secondary sort by id for consistency
+      const orderBy = sortBy === 'name'
+        ? [{ name: sortOrder }, { id: 'asc' }]
+        : { id: sortOrder }
+
+      const findOpts = {
         include: {
           roles: {
             include: { role: true }
           }
-        }
-      })
+        },
+        orderBy,
+        take: limit + 1
+      }
+
+      if (cursorObj) {
+        findOpts.cursor = sortBy === 'id' ? { id: cursorObj.id } : { name_id: { name: cursorObj.name, id: cursorObj.id } }
+        findOpts.skip = 1
+      }
+
+      const users = await prisma.user.findMany(findOpts)
+
+      const hasMore = users.length > limit
+      const pageItems = hasMore ? users.slice(0, limit) : users
 
       // Format agar roles berupa array nama role
-      const formattedUsers = users.map(user => ({
+      const formattedUsers = pageItems.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
@@ -123,7 +174,18 @@ export const superAdminUserController = {
         roles: user.roles.map(ur => ur.role.name)
       }))
 
-      return reply.send({ users: formattedUsers })
+      // Generate next cursor
+      let nextCursor = null
+      if (hasMore && pageItems.length > 0) {
+        const lastItem = pageItems[pageItems.length - 1]
+        if (sortBy === 'id') {
+          nextCursor = encodeURIComponent(JSON.stringify({ id: lastItem.id }))
+        } else {
+          nextCursor = encodeURIComponent(JSON.stringify({ name: lastItem.name, id: lastItem.id }))
+        }
+      }
+
+      return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor })
     } catch (error) {
       return reply.status(500).send({ error: error.message })
     }
