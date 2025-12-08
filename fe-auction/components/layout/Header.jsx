@@ -64,6 +64,7 @@ function Header() {
         <Button variant="ghost" className="p-2" onClick={toggleTheme} aria-label="Toggle color theme" title="Toggle theme">
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </Button>
+        {/* Auth area: avatar dropdown (jika login) atau tombol Login */}
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -74,17 +75,14 @@ function Header() {
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className={`w-64 p-0 rounded-xl shadow-lg absolute right-0 ${isDark ? 'border border-zinc-800 bg-zinc-900 text-zinc-200' : 'border border-zinc-200 bg-white text-zinc-900'}`}
-            >
-                <div className={`px-5 pt-4 pb-3 flex flex-col items-center text-center ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+            <DropdownMenuContent align="end" className={`w-64 p-0 rounded-xl shadow-lg absolute right-0 ${isDark ? 'border border-zinc-800 bg-zinc-900 text-zinc-200' : 'border border-zinc-200 bg-white text-zinc-900'}`}>
+              <div className={`px-5 pt-4 pb-3 flex flex-col items-center text-center ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                 <Avatar className="w-12 h-12 mb-2">
                   <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
                   <AvatarFallback className={`text-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-700'}`}>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
-                  <span className={`font-semibold text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}>{user.name}</span>
-                  <span className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} text-xs mb-1`}>{user.email}</span>
+                <span className={`font-semibold text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}>{user.name}</span>
+                <span className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} text-xs mb-1`}>{user.email}</span>
                 <span className="text-xs font-semibold rounded px-2 py-0.5 mb-1 bg-purple-900/60 text-purple-200 tracking-wide" style={{display:'inline-block'}}>
                   {Array.isArray(user.roles) ? user.roles[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''}
                 </span>
