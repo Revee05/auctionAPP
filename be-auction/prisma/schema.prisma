@@ -13,6 +13,14 @@ enum RoleName {
   COLLECTOR
 }
 
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DEACTIVATED
+  BANNED
+}
+
 model Role {
   id        Int       @id @default(autoincrement())
   name      RoleName  @unique
@@ -26,6 +34,7 @@ model User {
   email         String         @unique
   avatarUrl     String?
   password      String?
+  status        UserStatus     @default(ACTIVE)
   roles         UserRole[]
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now())

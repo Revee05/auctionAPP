@@ -99,7 +99,8 @@ export const adminUserController = {
 
       const formattedUsers = pageItems.map(user => ({
         ...user,
-        roles: user.roles.map(ur => ur.role.name)
+        roles: user.roles.map(ur => ur.role.name),
+        status: user.status || 'ACTIVE'
       }))
 
       // Generate next cursor

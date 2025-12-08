@@ -49,7 +49,8 @@ export default function UserManagement() {
           ? user.roles[0]
           : "USER",
         roles: user.roles || [],
-        status: user.status || "active",
+        // Normalize status from backend enums (e.g. "ACTIVE") to lowercase keys ("active")
+        status: user.status ? String(user.status).toLowerCase() : "active",
         createdAt: user.createdAt,
       }))
 
@@ -109,9 +110,28 @@ export default function UserManagement() {
   };
 
   const getStatusBadgeColor = (status) => {
-    return status === "active"
-      ? "bg-green-600/20 text-green-400 border-green-600"
-      : "bg-red-600/20 text-red-400 border-red-600";
+    const s = (status || "").toString().toLowerCase();
+    switch (s) {
+      case "active":
+        return "bg-green-600/20 text-green-400 border-green-600";
+      case "pending_verification":
+      case "pendingverification":
+      case "pending-verification":
+        return "bg-yellow-600/20 text-yellow-400 border-yellow-600";
+      case "suspended":
+      case "deactivated":
+      case "banned":
+        return "bg-red-600/20 text-red-400 border-red-600";
+      default:
+        return "bg-zinc-600/20 text-zinc-400 border-zinc-600";
+    }
+  };
+
+  // Friendly label for display (e.g. "PENDING_VERIFICATION" -> "Pending verification")
+  const formatStatusLabel = (status) => {
+    if (!status) return "Unknown";
+    const s = String(status).toLowerCase();
+    return s.replace(/[_-]/g, " ").replace(/(^|\s)\S/g, (t) => t.toUpperCase());
   };
 
   const handleAssignRole = async (userId, roleName) => {

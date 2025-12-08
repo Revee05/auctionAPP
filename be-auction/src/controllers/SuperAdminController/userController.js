@@ -171,7 +171,8 @@ export const superAdminUserController = {
         name: user.name,
         email: user.email,
         createdAt: user.createdAt,
-        roles: user.roles.map(ur => ur.role.name)
+        roles: user.roles.map(ur => ur.role.name),
+        status: user.status || 'ACTIVE'
       }))
 
       // Generate next cursor
