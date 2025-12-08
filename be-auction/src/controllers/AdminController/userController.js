@@ -92,6 +92,32 @@ export const adminUserController = {
     try {
       const { id } = request.params
       const { name, email, password } = request.body
+      // Fetch target user to check roles before allowing update
+      const targetUser = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          roles: {
+            include: { role: true }
+          }
+        }
+      })
+
+      if (!targetUser) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+
+      const targetRoles = targetUser.roles.map(ur => ur.role.name)
+      const requesterRoles = request.user?.roles || []
+
+      // Prevent non-super-admins from editing SUPER_ADMIN users
+      if (targetRoles.includes('SUPER_ADMIN') && !requesterRoles.includes('SUPER_ADMIN')) {
+        return reply.status(403).send({ error: 'Access denied. Cannot edit SUPER_ADMIN user.' })
+      }
+
+      // Prevent admins from editing other admins (unless requester is SUPER_ADMIN)
+      if (requesterRoles.includes('ADMIN') && targetRoles.includes('ADMIN') && !requesterRoles.includes('SUPER_ADMIN')) {
+        return reply.status(403).send({ error: 'Access denied. Admins cannot edit other admins.' })
+      }
       
       // Siapkan data update
       const data = {}
