@@ -1,74 +1,160 @@
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
+/**
+ * tokenHelper.js
+ *
+ * Ringkasan:
+ * - Menyediakan utilitas JWT (access token), refresh token acak, perhitungan expiry, dan opsi cookie.
+ * - Membaca konfigurasi dari environment variables (lihat .env).
+ *
+ * Environment variables yang dipakai:
+ * - JWT_SECRET                 : Secret untuk sign/verify JWT
+ * - JWT_ACCESS_EXPIRES_IN      : Expiry access token, contoh "15m", "24h", "7d"
+ * - JWT_REFRESH_EXPIRES_IN     : Expiry refresh token, contoh "7d"
+ * - ACCESS_COOKIE_NAME         : Nama cookie untuk access token
+ * - REFRESH_COOKIE_NAME        : Nama cookie untuk refresh token
+ * - COOKIE_SAME_SITE           : sameSite value untuk cookie ('strict'|'lax'|'none')
+ * - COOKIE_PATH                : path cookie (default '/')
+ * - NODE_ENV                   : production -> secure cookies aktif
+ *
+ * Mekanisme singkat:
+ * - generateAccessToken(payload) -> JWT signed (short lived)
+ * - verifyAccessToken(token) -> verifikasi JWT dan kembalikan payload
+ * - generateRefreshToken() -> string acak, disimpan di DB + expiry dari getRefreshTokenExpiryDate()
+ * - getCookieOptions(...) -> opsi cookie konsisten untuk setCookie/clearCookie
+ */
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m'
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+/* Config / constants */
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
-const ACCESS_COOKIE_NAME = process.env.ACCESS_COOKIE_NAME || 'access_token'
-const REFRESH_COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || 'refresh_token'
-const COOKIE_SECURE = process.env.NODE_ENV === 'production'
-const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || 'strict'
-const COOKIE_PATH = process.env.COOKIE_PATH || '/'
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "15m";
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 
+const ACCESS_COOKIE_NAME = process.env.ACCESS_COOKIE_NAME || "access_token";
+const REFRESH_COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || "refresh_token";
+const COOKIE_SECURE = process.env.NODE_ENV === "production";
+const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "strict";
+const COOKIE_PATH = process.env.COOKIE_PATH || "/";
+
+/**
+ * generateAccessToken
+ * - Membuat JWT signed berisi payload yang diberikan.
+ * - Gunakan untuk access token (pendek umur).
+ *
+ * @param {Object} payload - data yang ingin disimpan di token (mis. { userId, email, roles })
+ * @returns {String} signed JWT
+ */
 export function generateAccessToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_ACCESS_EXPIRES_IN })
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_ACCESS_EXPIRES_IN });
 }
 
+/**
+ * verifyAccessToken
+ * - Verifikasi JWT, melempar error jika token tidak valid / expired.
+ *
+ * @param {String} token - JWT string
+ * @returns {Object} decoded payload
+ * @throws {Error} jwt.Verify error bila tidak valid
+ */
 export function verifyAccessToken(token) {
-  return jwt.verify(token, JWT_SECRET)
+  return jwt.verify(token, JWT_SECRET);
 }
 
+/**
+ * generateRefreshToken
+ * - Membuat refresh token acak berbentuk hex string.
+ * - Tidak menggunakan JWT untuk refresh token (lebih sederhana, aman bila disimpan di DB).
+ *
+ * @returns {String} refresh token random
+ */
 export function generateRefreshToken() {
-  return crypto.randomBytes(64).toString('hex')
+  return crypto.randomBytes(64).toString("hex");
 }
 
+/**
+ * getRefreshTokenExpiryDate
+ * - Menghitung tanggal kadaluarsa untuk refresh token berdasarkan JWT_REFRESH_EXPIRES_IN.
+ * - Mendukung format singkat: Nd (hari), Nh (jam), Nm (menit). Default 7 hari.
+ *
+ * @returns {Date} expiry Date object
+ */
 export function getRefreshTokenExpiryDate() {
-  const expiry = new Date()
-  const v = JWT_REFRESH_EXPIRES_IN || '7d'
-  const match = String(v).match(/^(\d+)([dhm])$/)
+  const expiry = new Date();
+  const v = JWT_REFRESH_EXPIRES_IN || "7d";
+  const match = String(v).match(/^(\d+)([dhm])$/);
   if (match) {
-    const num = parseInt(match[1], 10)
-    const unit = match[2]
-    if (unit === 'd') expiry.setDate(expiry.getDate() + num)
-    else if (unit === 'h') expiry.setHours(expiry.getHours() + num)
-    else if (unit === 'm') expiry.setMinutes(expiry.getMinutes() + num)
-    return expiry
+    const num = parseInt(match[1], 10);
+    const unit = match[2];
+    if (unit === "d") expiry.setDate(expiry.getDate() + num);
+    else if (unit === "h") expiry.setHours(expiry.getHours() + num);
+    else if (unit === "m") expiry.setMinutes(expiry.getMinutes() + num);
+    return expiry;
   }
-  expiry.setDate(expiry.getDate() + 7)
-  return expiry
+  expiry.setDate(expiry.getDate() + 7);
+  return expiry;
 }
 
-function parseExpiryToMs(exp) {
-  const v = String(exp || JWT_ACCESS_EXPIRES_IN)
-  const match = v.match(/^(\d+)([dhm])$/)
+/* Internal util: konversi expiry string -> seconds */
+function parseExpiryToSeconds(exp) {
+  const v = String(exp || JWT_ACCESS_EXPIRES_IN);
+  const match = v.match(/^(\d+)([dhm])$/);
   if (match) {
-    const num = parseInt(match[1], 10)
-    const unit = match[2]
-    if (unit === 'd') return num * 24 * 60 * 60 * 1000
-    if (unit === 'h') return num * 60 * 60 * 1000
-    return num * 60 * 1000
+    const num = parseInt(match[1], 10);
+    const unit = match[2];
+    if (unit === "d") return num * 24 * 60 * 60;
+    if (unit === "h") return num * 60 * 60;
+    return num * 60;
   }
-  return 15 * 60 * 1000
+  // default 15 minutes
+  return 15 * 60;
 }
 
+/* NOTE: We use seconds everywhere for cookie maxAge (no milliseconds) */
+
+/**
+ * getCookieOptions
+ * - Menghasilkan opsi cookie konsisten yang dipakai saat setCookie.
+ * - Mengembalikan maxAge dalam detik (sesuai ekspektasi header Set-Cookie / banyak library).
+ *
+ * @param {Object} [opts]
+ * @param {boolean} [opts.httpOnly=true]
+ * @param {number} [opts.maxAge] - maxAge dalam detik
+ * @returns {Object} cookie options
+ */
 export function getCookieOptions({ httpOnly = true, maxAge } = {}) {
-  const defaultMaxAge = parseExpiryToMs(JWT_ACCESS_EXPIRES_IN)
+  const defaultMaxAgeSeconds = parseExpiryToSeconds(JWT_ACCESS_EXPIRES_IN);
   return {
     httpOnly,
     secure: COOKIE_SECURE,
     sameSite: COOKIE_SAME_SITE,
     path: COOKIE_PATH,
-    maxAge: typeof maxAge === 'number' ? maxAge : defaultMaxAge
-  }
+    // maxAge expected in seconds
+    maxAge: typeof maxAge === "number" ? Math.floor(maxAge) : defaultMaxAgeSeconds,
+  };
 }
 
+/**
+ * getRefreshCookieOptions
+ * - Menghasilkan opsi cookie khusus untuk refresh token berdasarkan
+ *   `JWT_REFRESH_EXPIRES_IN`. Mengembalikan maxAge (detik) agar header
+ *   `Set-Cookie` menghasilkan nilai yang benar.
+ *
+ * @returns {Object} cookie options ready-to-use untuk refresh cookie
+ */
+export function getRefreshCookieOptions() {
+  const seconds = parseExpiryToSeconds(JWT_REFRESH_EXPIRES_IN);
+  return getCookieOptions({ maxAge: seconds });
+}
+
+/* Default export object untuk kemudahan import */
 export default {
   generateAccessToken,
   verifyAccessToken,
   generateRefreshToken,
   getRefreshTokenExpiryDate,
   getCookieOptions,
+  getRefreshCookieOptions,
   ACCESS_COOKIE_NAME,
-  REFRESH_COOKIE_NAME
-}
+  REFRESH_COOKIE_NAME,
+};
