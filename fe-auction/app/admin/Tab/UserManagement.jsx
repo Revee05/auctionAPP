@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, UserPlus, Edit, Trash2, Shield, Mail, Loader2, AlertCircle } from "lucide-react";
+import { Search, Edit, Trash2, Shield, Mail, Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import apiClient from "@/lib/apiClient";
 import EditUserModal from "../components/EditUserModal";
 
@@ -16,6 +16,12 @@ export default function UserManagement() {
   const { hasRole: isAdmin } = useRole("ADMIN");
 
   const [users, setUsers] = useState([]);
+  // Pagination state: pages cache and current index
+  // pages: [{ cursor, users, nextCursor, hasNextPage }]
+  const [pages, setPages] = useState([])
+  const [currentPageIndex, setCurrentPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
+  const [sortOrder, setSortOrder] = useState('asc')
   // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 5),
   // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 4).
   const columnCount = isSuperAdmin || isAdmin ? 5 : 4;
@@ -23,43 +29,65 @@ export default function UserManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch users from API
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Fetch a page from API using cursor-based pagination
+  const fetchPage = async (cursor = null, append = false) => {
+    setIsLoading(true)
+    setError(null)
     try {
-      // Use SUPER_ADMIN endpoint if available, otherwise ADMIN endpoint
-      const endpoint = isSuperAdmin ? "/api/superadmin/users" : "/api/admin/users";
-      const response = await apiClient.get(endpoint);
-      
-      // Transform data to match UI expectations
+      const endpoint = isSuperAdmin ? "/api/superadmin/users" : "/api/admin/users"
+      const params = { limit: pageSize }
+      if (cursor) params.cursor = cursor
+      if (sortOrder) params.sort = sortOrder
+
+      const response = await apiClient.get(endpoint, { params })
+
       const transformedUsers = response.data.users.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
-        role: Array.isArray(user.roles) && user.roles.length > 0 
-          ? user.roles[0] // Get the first role
+        role: Array.isArray(user.roles) && user.roles.length > 0
+          ? user.roles[0]
           : "USER",
         roles: user.roles || [],
-        status: "active", // You can add this field to your backend if needed
+        status: user.status || "active",
         createdAt: user.createdAt,
-      }));
-      
-      setUsers(transformedUsers);
+      }))
+
+      const page = {
+        cursor,
+        users: transformedUsers,
+        nextCursor: response.data.nextCursor || null,
+        hasNextPage: !!response.data.hasNextPage
+      }
+
+      if (append) {
+        setPages(prev => {
+          // discard any forward cache beyond current index
+          const base = prev.slice(0, currentPageIndex + 1)
+          return [...base, page]
+        })
+        setCurrentPageIndex(i => i + 1)
+      } else {
+        setPages([page])
+        setCurrentPageIndex(0)
+      }
     } catch (err) {
-      console.error("Failed to fetch users:", err);
-      setError(err.response?.data?.error || "Failed to load users");
+      console.error("Failed to fetch users:", err)
+      setError(err.response?.data?.error || "Failed to load users")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
+  // Load first page on mount and when pageSize/sort/isSuperAdmin changes
   useEffect(() => {
-    fetchUsers();
+    fetchPage(null, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pageSize, sortOrder, isSuperAdmin])
 
-  const filteredUsers = users.filter(
+  const currentUsers = pages[currentPageIndex]?.users || []
+
+  const filteredUsers = currentUsers.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -94,8 +122,9 @@ export default function UserManagement() {
       );
 
       if (response.status === 200) {
-        // Refresh users list after successful assignment
-        await fetchUsers();
+        // Refresh current page after successful assignment
+        const cur = pages[currentPageIndex]?.cursor || null
+        await fetchPage(cur, false)
       }
     } catch (err) {
       console.error("Failed to assign role:", err);
@@ -109,7 +138,7 @@ export default function UserManagement() {
 
   // Open modal to edit user
   const handleEdit = (userId) => {
-    const u = users.find((x) => x.id === userId);
+    const u = currentUsers.find((x) => x.id === userId);
     if (u) setEditingUser(u);
   };
 
@@ -132,7 +161,9 @@ export default function UserManagement() {
     try {
       const resp = await apiClient.delete(`/api/superadmin/users/${userId}`)
       if (resp.status === 200) {
-        await fetchUsers()
+        // Refresh current page
+        const cur = pages[currentPageIndex]?.cursor || null
+        await fetchPage(cur, false)
       } else {
         alert(resp.data?.error || 'Failed to delete user')
       }
@@ -143,6 +174,27 @@ export default function UserManagement() {
       setIsLoading(false)
     }
   }
+
+  // Pagination controls
+  const handleNext = async () => {
+    const curPage = pages[currentPageIndex]
+    if (!curPage) return
+    // If we have cached next page, just move forward
+    if (pages[currentPageIndex + 1]) {
+      setCurrentPageIndex(i => i + 1)
+      return
+    }
+    // Otherwise fetch using nextCursor
+    if (curPage.nextCursor) {
+      await fetchPage(curPage.nextCursor, true)
+    }
+  }
+
+  const handlePrev = () => {
+    if (currentPageIndex > 0) setCurrentPageIndex(i => i - 1)
+  }
+
+  const totalLoaded = pages.reduce((s, p) => s + (p.users?.length || 0), 0)
 
   return (
     <div className="space-y-6">
@@ -173,21 +225,60 @@ export default function UserManagement() {
             Manage users and their permissions
           </p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add New User
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-zinc-500 text-sm">Page:</label>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm p-1 rounded-md border border-zinc-200 dark:border-zinc-700"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}
+              className="ml-2"
+            >
+              Sort: {sortOrder.toUpperCase()}
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handlePrev}
+            disabled={currentPageIndex <= 0 || isLoading}
+            className="mr-2"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-sm text-zinc-400 px-2">Page {currentPageIndex + 1}</span>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleNext}
+            disabled={isLoading || !pages[currentPageIndex]?.hasNextPage}
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 dark:text-zinc-400" />
         <Input
           type="text"
+          aria-label="Search users"
           placeholder="Search users by name or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500"
+          className="pl-12 h-10 w-full text-sm rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-500 border border-zinc-200 dark:border-zinc-800 shadow-sm"
         />
       </div>
 
@@ -199,8 +290,8 @@ export default function UserManagement() {
               <Shield className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs">Total Users</p>
-              <p className="text-2xl font-bold text-white">{users.length}</p>
+              <p className="text-zinc-400 text-xs">Total Users (loaded)</p>
+              <p className="text-2xl font-bold text-white">{totalLoaded}</p>
             </div>
           </div>
         </Card>
