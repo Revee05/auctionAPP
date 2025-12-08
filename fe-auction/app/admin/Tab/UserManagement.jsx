@@ -23,9 +23,9 @@ export default function UserManagement() {
   const [pageSize, setPageSize] = useState(20)
   const [sortBy, setSortBy] = useState('name') // 'id' or 'name'
   const [sortOrder, setSortOrder] = useState('asc') // 'asc' or 'desc'
-  // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 5),
-  // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 4).
-  const columnCount = isSuperAdmin || isAdmin ? 5 : 4;
+  // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 6 setelah menambahkan ID),
+  // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 5).
+  const columnCount = isSuperAdmin || isAdmin ? 6 : 5;
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -363,6 +363,7 @@ export default function UserManagement() {
           <table className="w-full">
             <thead className="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
               <tr>
+                  <th className="text-left p-4 text-zinc-400 font-medium text-sm">ID</th>
                 <th className="text-left p-4 text-zinc-400 font-medium text-sm">
                   User
                 </th>
@@ -393,6 +394,7 @@ export default function UserManagement() {
                     key={user.id}
                     className="hover:bg-zinc-800/50 transition-colors"
                   >
+                    <td className="p-4 text-zinc-500 text-sm">{user.id}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
