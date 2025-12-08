@@ -21,7 +21,7 @@ export default function UserManagement() {
   const [pages, setPages] = useState([])
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  const [sortBy, setSortBy] = useState('id') // 'id' or 'name'
+  const [sortBy, setSortBy] = useState('name') // 'id' or 'name'
   const [sortOrder, setSortOrder] = useState('asc') // 'asc' or 'desc'
   // Jika SUPER_ADMIN atau ADMIN menampilkan kolom Actions (jadi total kolom = 5),
   // jika bukan keduanya, kolom Actions disembunyikan (total kolom = 4).
