@@ -1,45 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useAuth, useRole } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, UserPlus, Edit, Trash2, Shield, Mail } from "lucide-react";
+import { Search, UserPlus, Edit, Trash2, Shield, Mail, Loader2, AlertCircle } from "lucide-react";
+import apiClient from "@/lib/apiClient";
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { hasRole } = useRole("SUPER_ADMIN");
 
-  // Mock data - Replace with actual API call
-  const [users] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@example.com",
-      role: "ADMIN",
-      status: "active",
-      createdAt: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "USER",
-      status: "active",
-      createdAt: "2024-02-20",
-    },
-    {
-      id: 3,
-      name: "Bob Wilson",
-      email: "bob@example.com",
-      role: "USER",
-      status: "inactive",
-      createdAt: "2024-03-10",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Use SUPER_ADMIN endpoint if available, otherwise ADMIN endpoint
+      const endpoint = hasRole ? "/api/superadmin/users" : "/api/admin/users";
+      const response = await apiClient.get(endpoint);
+      
+      // Transform data to match UI expectations
+      const transformedUsers = response.data.users.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: Array.isArray(user.roles) && user.roles.length > 0 
+          ? user.roles[0] // Get the first role
+          : "USER",
+        roles: user.roles || [],
+        status: "active", // You can add this field to your backend if needed
+        createdAt: user.createdAt,
+      }));
+      
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      setError(err.response?.data?.error || "Failed to load users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -53,6 +66,10 @@ export default function UserManagement() {
         return "bg-purple-600/20 text-purple-400 border-purple-600";
       case "ADMIN":
         return "bg-blue-600/20 text-blue-400 border-blue-600";
+      case "ARTIST":
+        return "bg-green-600/20 text-green-400 border-green-600";
+      case "COLLECTOR":
+        return "bg-orange-600/20 text-orange-400 border-orange-600";
       default:
         return "bg-zinc-600/20 text-zinc-400 border-zinc-600";
     }
@@ -64,8 +81,37 @@ export default function UserManagement() {
       : "bg-red-600/20 text-red-400 border-red-600";
   };
 
+  const handleAssignRole = async (userId, roleName) => {
+    try {
+      const response = await apiClient.post(
+        `/api/superadmin/users/${userId}/roles`,
+        { roleName }
+      );
+
+      if (response.status === 200) {
+        // Refresh users list after successful assignment
+        await fetchUsers();
+      }
+    } catch (err) {
+      console.error("Failed to assign role:", err);
+      alert(err.response?.data?.error || "Failed to assign role");
+      // Revert optimistic update
+      await fetchUsers();
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <Card className="bg-red-900/20 border-red-500 p-4">
+          <div className="flex items-center gap-3 text-red-400">
+            <AlertCircle className="w-5 h-5" />
+            <p>{error}</p>
+          </div>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -126,7 +172,7 @@ export default function UserManagement() {
             <div>
               <p className="text-zinc-400 text-xs">Admins</p>
               <p className="text-2xl font-bold text-white">
-                {users.filter((u) => u.role !== "USER").length}
+                {users.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}
               </p>
             </div>
           </div>
@@ -135,6 +181,11 @@ export default function UserManagement() {
 
       {/* Users Table */}
       <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-zinc-950 border-b border-zinc-800">
@@ -190,13 +241,47 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
-                          user.role
-                        )}`}
-                      >
-                        {user.role}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getRoleBadgeColor(
+                            user.role
+                          )}`}
+                        >
+                          {user.role}
+                        </span>
+
+                        {/* Role assignment controls - only visible to SUPER_ADMIN */}
+                        {hasRole && (
+                          <div className="ml-3 flex items-center gap-2">
+                            <select
+                              value={user.role}
+                              onChange={(e) => {
+                                const newRole = e.target.value;
+                                // Optimistic update
+                                setUsers((prev) =>
+                                  prev.map((u) =>
+                                    u.id === user.id ? { ...u, role: newRole } : u
+                                  )
+                                );
+                              }}
+                              className="bg-zinc-800 text-white text-sm p-1 rounded-md border border-zinc-700"
+                            >
+                              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                              <option value="ADMIN">ADMIN</option>
+                              <option value="ARTIST">ARTIST</option>
+                              <option value="COLLECTOR">COLLECTOR</option>
+                            </select>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAssignRole(user.id, user.role)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              disabled={isLoading}
+                            >
+                              Assign
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <span
@@ -238,6 +323,7 @@ export default function UserManagement() {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
     </div>
   );
