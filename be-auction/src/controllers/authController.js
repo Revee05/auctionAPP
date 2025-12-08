@@ -1,5 +1,4 @@
 import { authService } from "../services/authService.js";
-import { prisma } from "../../lib/prisma.js";
 import tokenHelper from "../utils/tokenHelper.js";
 
 // ============================================
@@ -142,39 +141,11 @@ export const authController = {
   // =========================
   async me(request, reply) {
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: request.user.userId },
-        include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-          roles: true,
-        },
-      });
+      const user = await authService.me(request.user.userId)
 
-      if (!user) {
-        return reply.status(404).send({ error: "User not found" });
-      }
-
-      const formattedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        roles: user.roles.map((ur) => ur.role.name),
-        createdAt: user.createdAt,
-      };
-
-      return reply.send({ user: formattedUser });
+      return reply.send({ user })
     } catch (error) {
-      return reply.status(400).send({ error: error.message });
+      return reply.status(400).send({ error: error.message })
     }
   },
 

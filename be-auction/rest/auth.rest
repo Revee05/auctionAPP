@@ -93,7 +93,7 @@ POST {{baseUrl}}/api/auth/logout
 POST {{baseUrl}}/api/auth/logout-all
 
 ### Fallback: Me dengan Bearer (jika perlu manual)
-@token = <PASTE_TOKEN_HERE_IF_NEEDED>
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI4LCJlbWFpbCI6InN1cGVyYWRtaW5AYXVjdGlvbmFwcC5jb20iLCJyb2xlcyI6WyJTVVBFUl9BRE1JTiJdLCJpYXQiOjE3NjUxNjA4NjQsImV4cCI6MTc2NTE2MTc2NH0.6fckPS9GUVicUNgK3DZDVaCeXOBPNFzaqAxNcLAEym4
 GET {{baseUrl}}/api/auth/me
 Authorization: Bearer {{token}}
 

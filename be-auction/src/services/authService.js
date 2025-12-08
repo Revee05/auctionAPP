@@ -189,5 +189,33 @@ export const authService = {
     } catch (error) {
       throw new Error('Invalid token')
     }
+  },
+
+
+  // ============================================
+  // ME - Ambil data user saat ini
+  // ============================================
+  async me(userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    })
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles.map(ur => ur.role.name),
+    }
   }
 }
