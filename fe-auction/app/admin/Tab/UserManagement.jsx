@@ -103,7 +103,7 @@ export default function UserManagement() {
   useEffect(() => {
     const t = setTimeout(() => {
       fetchPage(null, false)
-    }, 450)
+    }, 2000) // 2 seconds debounce
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
