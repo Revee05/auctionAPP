@@ -207,12 +207,12 @@ function Header() {
           </nav>
 
           <div className={`${isDark ? 'my-3 border-t border-zinc-200/60 pt-3 text-xs text-zinc-400 px-3' : 'my-3 border-t border-zinc-800/60 pt-3 text-xs text-zinc-500 px-1'}`}>
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Theme</span>
               <button onClick={toggleTheme} aria-label="Toggle color theme" className="p-2 rounded-lg hover:bg-zinc-800/60">
                 {isDark ? <Sun className="w-5 h-5 text-zinc-300" /> : <Moon className="w-5 h-5 text-zinc-500" />}
               </button>
-            </div>
+            </div> */}
             <div className="mt-3 text-center text-zinc-500">© {new Date().getFullYear()} ArtAuction</div>
           </div>
         </SheetContent>
