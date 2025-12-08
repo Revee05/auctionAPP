@@ -1,11 +1,7 @@
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { prisma } from '../../lib/prisma.js'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m'
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+import tokenHelper from '../utils/tokenHelper.js'
 
 export const authService = {
   // ============================================
@@ -77,20 +73,15 @@ export const authService = {
     const roles = user.roles.map(ur => ur.role.name)
 
     // Generate access token (short-lived)
-    const accessToken = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email,
-        roles 
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_ACCESS_EXPIRES_IN }
-    )
+    const accessToken = tokenHelper.generateAccessToken({
+      userId: user.id,
+      email: user.email,
+      roles
+    })
 
     // Generate refresh token (long-lived)
-    const refreshToken = crypto.randomBytes(64).toString('hex')
-    const refreshTokenExpiry = new Date()
-    refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + 7) // 7 days
+    const refreshToken = tokenHelper.generateRefreshToken()
+    const refreshTokenExpiry = tokenHelper.getRefreshTokenExpiryDate()
 
     // Save refresh token to database
     await prisma.refreshToken.create({
@@ -148,15 +139,11 @@ export const authService = {
     const roles = storedToken.user.roles.map(ur => ur.role.name)
 
     // Generate new access token
-    const accessToken = jwt.sign(
-      { 
-        userId: storedToken.user.id, 
-        email: storedToken.user.email,
-        roles 
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_ACCESS_EXPIRES_IN }
-    )
+    const accessToken = tokenHelper.generateAccessToken({
+      userId: storedToken.user.id,
+      email: storedToken.user.email,
+      roles
+    })
 
     return {
       accessToken,
@@ -198,7 +185,7 @@ export const authService = {
   // ============================================
   verifyToken(token) {
     try {
-      return jwt.verify(token, JWT_SECRET)
+      return tokenHelper.verifyAccessToken(token)
     } catch (error) {
       throw new Error('Invalid token')
     }

@@ -1,5 +1,6 @@
 import { authService } from '../services/authService.js'
 import { prisma } from '../../lib/prisma.js'
+import tokenHelper from '../utils/tokenHelper.js'
 
 // ============================================
 // AUTH CONTROLLER - Cookie-based Authentication
@@ -44,24 +45,26 @@ export const authController = {
       
       const result = await authService.login(email, password)
       
-      // Set access token di HTTP-only cookie
-      reply.setCookie('access_token', result.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 15 * 60 * 1000, // 15 menit
-        // maxAge:  20// 20 detik (untuk testing)
-      })
+      // Set access token di HTTP-only cookie (names/options from env via helper)
+      reply.setCookie(tokenHelper.ACCESS_COOKIE_NAME, result.accessToken, tokenHelper.getCookieOptions())
 
       // Set refresh token di HTTP-only cookie
-      reply.setCookie('refresh_token', result.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 // 7 hari
-      })
+      // refresh cookie can be longer lived; use cookie options with explicit maxAge (ms)
+      const refreshMaxAgeMs = (() => {
+        // parse JWT_REFRESH_EXPIRES_IN like '7d' to ms
+        const v = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+        const match = String(v).match(/^(\d+)([dhm])$/)
+        if (match) {
+          const num = parseInt(match[1], 10)
+          const unit = match[2]
+          if (unit === 'd') return num * 24 * 60 * 60 * 1000
+          if (unit === 'h') return num * 60 * 60 * 1000
+          return num * 60 * 1000
+        }
+        return 7 * 24 * 60 * 60 * 1000
+      })()
+
+      reply.setCookie(tokenHelper.REFRESH_COOKIE_NAME, result.refreshToken, tokenHelper.getCookieOptions({ maxAge: refreshMaxAgeMs }))
       
       return reply.send({ 
         message: 'Login successful',
@@ -77,7 +80,7 @@ export const authController = {
   // =========================
   async refresh(request, reply) {
     try {
-      const refreshToken = request.cookies.refresh_token
+      const refreshToken = request.cookies[tokenHelper.REFRESH_COOKIE_NAME]
       
       if (!refreshToken) {
         return reply.status(401).send({ error: 'No refresh token provided' })
@@ -86,14 +89,7 @@ export const authController = {
       const result = await authService.refreshAccessToken(refreshToken)
       
       // Set access token baru di cookie
-      reply.setCookie('access_token', result.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 15 * 60 * 1000, // 15 menit
-        // maxAge:  20// 20 detik (untuk testing)
-      })
+      reply.setCookie(tokenHelper.ACCESS_COOKIE_NAME, result.accessToken, tokenHelper.getCookieOptions())
       
       return reply.send({ 
         message: 'Token refreshed successfully',
@@ -109,14 +105,14 @@ export const authController = {
   // =========================
   async logout(request, reply) {
     try {
-      const refreshToken = request.cookies.refresh_token
+      const refreshToken = request.cookies[tokenHelper.REFRESH_COOKIE_NAME]
       
       // Hapus refresh token dari database
       await authService.logout(refreshToken)
       
       // Hapus cookie
-      reply.clearCookie('access_token', { path: '/' })
-      reply.clearCookie('refresh_token', { path: '/' })
+      reply.clearCookie(tokenHelper.ACCESS_COOKIE_NAME, { path: '/' })
+      reply.clearCookie(tokenHelper.REFRESH_COOKIE_NAME, { path: '/' })
       
       return reply.send({ message: 'Logged out successfully' })
     } catch (error) {
@@ -135,8 +131,8 @@ export const authController = {
       await authService.logoutAll(userId)
       
       // Hapus cookie
-      reply.clearCookie('access_token', { path: '/' })
-      reply.clearCookie('refresh_token', { path: '/' })
+      reply.clearCookie(tokenHelper.ACCESS_COOKIE_NAME, { path: '/' })
+      reply.clearCookie(tokenHelper.REFRESH_COOKIE_NAME, { path: '/' })
       
       return reply.send({ message: 'Logged out from all devices' })
     } catch (error) {
@@ -190,8 +186,8 @@ export const authController = {
   // =========================
   async status(request, reply) {
     try {
-      const accessToken = request.cookies.access_token
-      const refreshToken = request.cookies.refresh_token
+      const accessToken = request.cookies[tokenHelper.ACCESS_COOKIE_NAME]
+      const refreshToken = request.cookies[tokenHelper.REFRESH_COOKIE_NAME]
       
       return reply.send({
         isLoggedIn: !!(accessToken || refreshToken),
