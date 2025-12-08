@@ -187,6 +187,12 @@ export const superAdminUserController = {
         status: user.status || 'ACTIVE'
       }))
 
+      // Compute counts from DB (respect current filters)
+      const baseWhere = where
+      const totalUsers = await prisma.user.count({ where: baseWhere })
+      const activeUsers = await prisma.user.count({ where: { ...baseWhere, status: 'ACTIVE' } })
+      const adminCount = await prisma.user.count({ where: { ...baseWhere, roles: { some: { role: { name: { in: ['ADMIN','SUPER_ADMIN'] } } } } } })
+
       // Generate next cursor
       let nextCursor = null
       if (hasMore && pageItems.length > 0) {
@@ -198,7 +204,7 @@ export const superAdminUserController = {
         }
       }
 
-      return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor })
+      return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor, totalUsers, activeUsers, adminCount })
     } catch (error) {
       return reply.status(500).send({ error: error.message })
     }

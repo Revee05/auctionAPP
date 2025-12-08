@@ -29,6 +29,7 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totals, setTotals] = useState({ totalUsers: 0, activeUsers: 0, adminCount: 0 })
 
   // Fetch a page from API using cursor-based pagination
   const fetchPage = async (cursor = null, append = false) => {
@@ -61,6 +62,15 @@ export default function UserManagement() {
         users: transformedUsers,
         nextCursor: response.data.nextCursor || null,
         hasNextPage: !!response.data.hasNextPage
+      }
+
+      // update totals from server (if provided)
+      if (response.data.totalUsers !== undefined) {
+        setTotals({
+          totalUsers: Number(response.data.totalUsers) || 0,
+          activeUsers: Number(response.data.activeUsers) || 0,
+          adminCount: Number(response.data.adminCount) || 0
+        })
       }
 
       if (append) {
@@ -331,8 +341,8 @@ export default function UserManagement() {
               <Shield className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs">Total Users (loaded)</p>
-              <p className="text-2xl font-bold text-white">{totalLoaded}</p>
+              <p className="text-zinc-400 text-xs">Total Users</p>
+              <p className="text-2xl font-bold text-white">{totals.totalUsers ?? totalLoaded}</p>
             </div>
           </div>
         </Card>
@@ -343,9 +353,7 @@ export default function UserManagement() {
             </div>
             <div>
               <p className="text-zinc-400 text-xs">Active Users</p>
-              <p className="text-2xl font-bold text-white">
-                {currentUsers.filter((u) => u.status === "active").length}
-              </p>
+              <p className="text-2xl font-bold text-white">{totals.activeUsers ?? currentUsers.filter((u) => u.status === "active").length}</p>
             </div>
           </div>
         </Card>
@@ -356,9 +364,7 @@ export default function UserManagement() {
             </div>
             <div>
               <p className="text-zinc-400 text-xs">Admins</p>
-              <p className="text-2xl font-bold text-white">
-                {currentUsers.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}
-              </p>
+              <p className="text-2xl font-bold text-white">{totals.adminCount ?? currentUsers.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}</p>
             </div>
           </div>
         </Card>

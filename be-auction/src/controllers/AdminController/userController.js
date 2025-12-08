@@ -113,6 +113,14 @@ export const adminUserController = {
         status: user.status || 'ACTIVE'
       }))
 
+      // Compute counts from DB (respect current visibility/filtering rules)
+      // baseWhere already contains visibility filters (e.g. exclude SUPER_ADMIN for non-super-admins)
+      const baseWhere = where
+      const totalUsers = await prisma.user.count({ where: baseWhere })
+      const activeUsers = await prisma.user.count({ where: { ...baseWhere, status: 'ACTIVE' } })
+      const adminNames = isSuperAdmin ? ['ADMIN', 'SUPER_ADMIN'] : ['ADMIN']
+      const adminCount = await prisma.user.count({ where: { ...baseWhere, roles: { some: { role: { name: { in: adminNames } } } } } })
+
       // Generate next cursor
       let nextCursor = null
       if (hasMore && pageItems.length > 0) {
@@ -124,7 +132,7 @@ export const adminUserController = {
         }
       }
 
-      return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor })
+      return reply.send({ users: formattedUsers, nextCursor, hasNextPage: !!nextCursor, totalUsers, activeUsers, adminCount })
     } catch (error) {
       return reply.status(500).send({ error: error.message })
     }
