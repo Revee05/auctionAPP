@@ -115,8 +115,8 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">User Management</h2>
-          <p className="text-zinc-400 text-sm mt-1">
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">User Management</h2>
+          <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
             Manage users and their permissions
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function UserManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-zinc-900 border-zinc-800 p-4">
+        <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-600/20 rounded-lg">
               <Shield className="w-5 h-5 text-blue-400" />
@@ -151,7 +151,7 @@ export default function UserManagement() {
             </div>
           </div>
         </Card>
-        <Card className="bg-zinc-900 border-zinc-800 p-4">
+        <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-600/20 rounded-lg">
               <Shield className="w-5 h-5 text-green-400" />
@@ -164,7 +164,7 @@ export default function UserManagement() {
             </div>
           </div>
         </Card>
-        <Card className="bg-zinc-900 border-zinc-800 p-4">
+        <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-600/20 rounded-lg">
               <Shield className="w-5 h-5 text-purple-400" />
@@ -180,7 +180,7 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <Card className="bg-zinc-900 border-zinc-800 overflow-hidden">
+      <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center p-12">
             <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
@@ -188,7 +188,7 @@ export default function UserManagement() {
         ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-zinc-950 border-b border-zinc-800">
+            <thead className="bg-zinc-100 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <th className="text-left p-4 text-zinc-400 font-medium text-sm">
                   User
@@ -222,7 +222,7 @@ export default function UserManagement() {
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10 bg-zinc-800 border border-zinc-700">
+                        <Avatar className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                           <AvatarFallback className="bg-blue-600 text-white text-sm">
                             {user.name
                               .split(" ")
@@ -232,8 +232,8 @@ export default function UserManagement() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-white font-medium">{user.name}</p>
-                          <p className="text-zinc-500 text-sm flex items-center gap-1">
+                          <p className="text-zinc-900 dark:text-white font-medium">{user.name}</p>
+                          <p className="text-zinc-500 dark:text-zinc-400 text-sm flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {user.email}
                           </p>
@@ -264,7 +264,7 @@ export default function UserManagement() {
                                   )
                                 );
                               }}
-                              className="bg-zinc-800 text-white text-sm p-1 rounded-md border border-zinc-700"
+                              className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm p-1 rounded-md border border-zinc-200 dark:border-zinc-700"
                             >
                               <option value="SUPER_ADMIN">SUPER_ADMIN</option>
                               <option value="ADMIN">ADMIN</option>

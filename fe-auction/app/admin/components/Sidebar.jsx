@@ -19,11 +19,11 @@ const menuItems = [
 
 function SidebarContent({ activeTab, onTabClick }) {
   return (
-    <div className="flex flex-col h-full bg-zinc-950 border-r border-zinc-800">
+    <div className="flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
       {/* Logo / Header */}
-      <div className="p-6 border-b border-zinc-800">
-        <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-        <p className="text-xs text-zinc-500 mt-1">Auction Management</p>
+      <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Admin Panel</h2>
+        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Auction Management</p>
       </div>
 
       {/* Navigation Menu */}
@@ -42,7 +42,7 @@ function SidebarContent({ activeTab, onTabClick }) {
                 ${
                   isActive
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                    : "text-zinc-700 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white"
                 }
               `}
             >
@@ -54,8 +54,8 @@ function SidebarContent({ activeTab, onTabClick }) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-zinc-800">
-        <div className="text-xs text-zinc-500">
+      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+        <div className="text-xs text-zinc-600 dark:text-zinc-400">
           <p>Version 1.0.0</p>
           <p className="mt-1">© 2024 Auction App</p>
         </div>

@@ -33,11 +33,17 @@ export const adminUserController = {
       })
       
       // Format agar roles berupa array string
-      const formattedUsers = users.map(user => ({
+      let formattedUsers = users.map(user => ({
         ...user,
         roles: user.roles.map(ur => ur.role.name)
       }))
-      
+
+      // Jika requester BUKAN SUPER_ADMIN, sembunyikan user yang memiliki role SUPER_ADMIN
+      const requesterRoles = request.user?.roles || []
+      if (!requesterRoles.includes('SUPER_ADMIN')) {
+        formattedUsers = formattedUsers.filter(u => !u.roles.includes('SUPER_ADMIN'))
+      }
+
       return reply.send({ users: formattedUsers })
     } catch (error) {
       return reply.status(500).send({ error: error.message })
@@ -81,7 +87,13 @@ export const adminUserController = {
         ...user,
         roles: user.roles.map(ur => ur.role.name)
       }
-      
+
+      // Jika requester BUKAN SUPER_ADMIN, jangan izinkan melihat user yang punya role SUPER_ADMIN
+      const requesterRoles = request.user?.roles || []
+      if (formattedUser.roles.includes('SUPER_ADMIN') && !requesterRoles.includes('SUPER_ADMIN')) {
+        return reply.status(403).send({ error: 'Access denied. Cannot view SUPER_ADMIN user.' })
+      }
+
       return reply.send({ user: formattedUser })
     } catch (error) {
       return reply.status(500).send({ error: error.message })

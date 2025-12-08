@@ -91,10 +91,10 @@ export default function DashboardStats() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div>
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
           Welcome back, {user?.name || "Admin"}!
         </h2>
-        <p className="text-zinc-400 text-sm mt-1">
+        <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-1">
           Here&apos;s what&apos;s happening with your auction platform today.
         </p>
       </div>
@@ -122,9 +122,9 @@ export default function DashboardStats() {
           const Icon = stat.icon;
           return (
             <Card
-              key={index}
-              className="bg-zinc-900 border-zinc-800 p-5 hover:border-zinc-700 transition-colors"
-            >
+                  key={index}
+                  className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-5 hover:border-zinc-700 transition-colors"
+                >
               <div className="flex items-start justify-between mb-4">
                 <div
                   className={`p-2 rounded-lg ${getColorClasses(stat.color)}`}
@@ -139,8 +139,8 @@ export default function DashboardStats() {
                   {stat.change}
                 </span>
               </div>
-              <h3 className="text-zinc-400 text-sm mb-1">{stat.title}</h3>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <h3 className="text-zinc-600 dark:text-zinc-400 text-sm mb-1">{stat.title}</h3>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-white">{stat.value}</p>
             </Card>
           );
         })}
@@ -149,10 +149,10 @@ export default function DashboardStats() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <Card className="bg-zinc-900 border-zinc-800 p-6">
+        <Card className="bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 p-6">
           <div className="flex items-center gap-2 mb-6">
             <Clock className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
               Recent Activity
             </h3>
           </div>
@@ -175,10 +175,10 @@ export default function DashboardStats() {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="bg-zinc-900 border-zinc-800 p-6">
+        <Card className="bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 p-6">
           <div className="flex items-center gap-2 mb-6">
             <Activity className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white">Quick Actions</h3>
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Quick Actions</h3>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button className="p-4 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-left transition-colors group">
