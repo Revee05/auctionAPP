@@ -108,7 +108,7 @@ export const superAdminUserController = {
     try {
       // Cursor-based pagination
       // Query params: ?limit=20&cursor=<cursorValue>&sortBy=id|name&sortOrder=asc|desc
-      const { limit: limitQ, cursor: cursorQ, sortBy: sortByQ, sortOrder: sortOrderQ } = request.query || {}
+      const { limit: limitQ, cursor: cursorQ, sortBy: sortByQ, sortOrder: sortOrderQ, q: qQ } = request.query || {}
       let limit = parseInt(limitQ, 10)
       if (Number.isNaN(limit) || limit <= 0) limit = 20
       limit = Math.min(limit, 100)
@@ -145,7 +145,17 @@ export const superAdminUserController = {
         ? [{ name: sortOrder }, { id: 'asc' }]
         : { id: sortOrder }
 
+      // Build where clause (add server-side search if provided)
+      const where = {}
+      if (qQ) {
+        where.OR = [
+          { name: { contains: String(qQ), mode: 'insensitive' } },
+          { email: { contains: String(qQ), mode: 'insensitive' } }
+        ]
+      }
+
       const findOpts = {
+        where,
         include: {
           roles: {
             include: { role: true }
@@ -156,7 +166,9 @@ export const superAdminUserController = {
       }
 
       if (cursorObj) {
-        findOpts.cursor = sortBy === 'id' ? { id: cursorObj.id } : { name_id: { name: cursorObj.name, id: cursorObj.id } }
+        // Prisma cursor must reference a unique field or a defined compound unique.
+        // Our schema doesn't define a compound unique on (name, id), so always use id as cursor.
+        findOpts.cursor = { id: cursorObj.id }
         findOpts.skip = 1
       }
 

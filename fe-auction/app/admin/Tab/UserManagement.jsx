@@ -36,7 +36,9 @@ export default function UserManagement() {
     setError(null)
     try {
       const endpoint = isSuperAdmin ? "/api/superadmin/users" : "/api/admin/users"
+      // include server-side search param `q` so backend can return matching results
       const params = { limit: pageSize, sortBy, sortOrder }
+      if (searchQuery) params.q = searchQuery
       if (cursor) params.cursor = cursor
 
       const response = await apiClient.get(endpoint, { params })
@@ -85,6 +87,16 @@ export default function UserManagement() {
     fetchPage(null, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageSize, sortBy, sortOrder, isSuperAdmin])
+
+  // When user types a search, debounce and fetch from server so we can find users
+  // not yet loaded in the current page cache.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fetchPage(null, false)
+    }, 450)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
 
   const currentUsers = pages[currentPageIndex]?.users || []
 
