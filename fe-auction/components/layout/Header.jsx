@@ -68,7 +68,7 @@ function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="focus:outline-none cursor-pointer group hover:scale-105 hover:shadow-lg active:scale-95 transition-transform duration-150">
-                <Avatar className="transition-shadow duration-150 rounded-full group-hover:shadow-[0_0_12px_rgba(139,92,246,0.75)] group-hover:ring-2 group-hover:ring-purple-400/60">
+                <Avatar className={`transition-shadow duration-150 rounded-full ring-2 ring-purple-500/50 ring-offset-1 ${isDark ? 'ring-offset-zinc-900' : 'ring-offset-white'} group-hover:shadow-[0_0_14px_rgba(139,92,246,0.9)] group-hover:ring-4 group-hover:ring-purple-400/70`}>
                   <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
                   <AvatarFallback>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
@@ -148,17 +148,17 @@ function Header() {
           <div className={`flex items-center gap-3 px-1 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
             {user ? (
               <Link href="/profile" className="flex items-center gap-3 w-full">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
-                    <AvatarFallback className={`text-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-700'}`}>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col text-left">
-                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'} truncate`}>{user.name}</span>
-                    <span className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'} truncate`}>{user.email}</span>
+                  <div className="flex items-center gap-3">
+                    <Avatar className={`w-12 h-12 rounded-full transition-shadow duration-150 ${isDark ? 'ring-2 ring-purple-400/40 ring-offset-1 ring-offset-zinc-900' : 'ring-2 ring-purple-400/40 ring-offset-1 ring-offset-white'}`}>
+                      <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+                      <AvatarFallback className={`text-lg ${isDark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-700'}`}>{user.name?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col text-left">
+                      <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-zinc-900'} truncate`}>{user.name}</span>
+                      <span className={`text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'} truncate`}>{user.email}</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
             ) : (
                 <div className="w-full">
                 {/* Login tidak ditampilkan di sheet — tetap di header kanan */}
