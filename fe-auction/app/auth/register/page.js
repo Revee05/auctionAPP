@@ -1,65 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { authService } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
 export default function RegisterPage() {
-  const [selectedRole, setSelectedRole] = useState("collector"); // collector atau artist
+  const [selectedRole, setSelectedRole] = useState("COLLECTOR"); // COLLECTOR or ARTIST
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setUser, setRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      // TODO: Replace with real API call to backend
-      const response = await fetch("http://localhost:3500/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          name, 
-          email, 
-          password, 
-          role: selectedRole 
-        }),
-        credentials: "include",
+      const result = await authService.register({
+        name,
+        email,
+        password,
+        roleName: selectedRole,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Registration failed");
-      }
-
-      const data = await response.json();
-      
-      // Set user & role dari response backend
-      setUser(data.user);
-      setRole(data.role);
-      
-      // Simpan di localStorage
-      localStorage.setItem("user", JSON.stringify({ user: data.user, role: data.role }));
-
-      // Redirect berdasarkan role
-      if (data.role === "artist") {
-        router.push("/my-art");
-      } else if (data.role === "collector") {
-        router.push("/my-bids");
-      } else {
-        router.push("/");
+      if (result.success) {
+        setSuccess(result.message || "Registration successful! Redirecting to login...");
+        
+        // Clear form
+        setName("");
+        setEmail("");
+        setPassword("");
+        
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          router.push("/auth/login");
+        }, 2000);
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -77,14 +72,20 @@ export default function RegisterPage() {
           </div>
         )}
 
+        {success && (
+          <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-2 rounded mb-4">
+            {success}
+          </div>
+        )}
+
         <form onSubmit={handleRegister} className="space-y-4">
           {/* Role Selection */}
           <div className="flex gap-2 mb-4">
             <Button
               type="button"
-              onClick={() => setSelectedRole("collector")}
+              onClick={() => setSelectedRole("COLLECTOR")}
               className={`flex-1 py-2 rounded font-semibold transition ${
-                selectedRole === "collector"
+                selectedRole === "COLLECTOR"
                   ? "bg-black text-white border-2 border-purple-400"
                   : "bg-zinc-800 text-zinc-400 border border-zinc-700"
               }`}
@@ -93,9 +94,9 @@ export default function RegisterPage() {
             </Button>
             <Button
               type="button"
-              onClick={() => setSelectedRole("artist")}
+              onClick={() => setSelectedRole("ARTIST")}
               className={`flex-1 py-2 rounded font-semibold transition ${
-                selectedRole === "artist"
+                selectedRole === "ARTIST"
                   ? "bg-black text-white border-2 border-purple-400"
                   : "bg-zinc-800 text-zinc-400 border border-zinc-700"
               }`}
@@ -106,13 +107,13 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-white font-semibold mb-2">
-              {selectedRole === "artist" ? "Artist Name" : "Full Name"}
+              {selectedRole === "ARTIST" ? "Artist Name" : "Full Name"}
             </label>
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={selectedRole === "artist" ? "Your artist name" : "John Doe"}
+              placeholder={selectedRole === "ARTIST" ? "Your artist name" : "John Doe"}
               className="text-white"
               required
             />
@@ -124,7 +125,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={selectedRole === "artist" ? "artist@example.com" : "you@example.com"}
+              placeholder={selectedRole === "ARTIST" ? "artist@example.com" : "you@example.com"}
               className="text-white"
               required
             />
@@ -145,9 +146,9 @@ export default function RegisterPage() {
           <Button 
             type="submit" 
             className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
-            disabled={loading}
+            disabled={loading || !!success}
           >
-            {loading ? "Creating account..." : `Register as ${selectedRole === "artist" ? "Artist" : "Collector"}`}
+            {loading ? "Creating account..." : `Register as ${selectedRole === "ARTIST" ? "Artist" : "Collector"}`}
           </Button>
         </form>
 

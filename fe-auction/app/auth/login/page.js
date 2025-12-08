@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { setUser, setRole } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.push("/");
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,40 +28,28 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with real API call to backend
-      const response = await fetch("http://localhost:3500/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Login failed");
-      }
-
-      const data = await response.json();
+      const result = await login(email, password);
       
-      // Set user & role dari response backend
-      setUser(data.user);
-      setRole(data.user.roles[0]); // atau handle multi-role jika perlu
-      
-      // Simpan di localStorage
-      localStorage.setItem("user", JSON.stringify({ user: data.user, role: data.role }));
-
-      // Redirect berdasarkan role
-      if (data.user.roles.includes("SUPER_ADMIN")) {
-        router.push("/");
-      } else if (data.user.roles.includes("ARTIST")) {
-        router.push("/");
-      } else if (data.user.roles.includes("COLLECTOR")) {
-        router.push("/");
+      if (result.success) {
+        // Redirect based on user role
+        const roles = result.user.roles || [];
+        
+        if (roles.includes("SUPER_ADMIN")) {
+          router.push("/admin");
+        } else if (roles.includes("ADMIN")) {
+          router.push("/admin");
+        } else if (roles.includes("ARTIST")) {
+          router.push("/auctions");
+        } else if (roles.includes("COLLECTOR")) {
+          router.push("/auctions");
+        } else {
+          router.push("/");
+        }
       } else {
-        router.push("/");
+        setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }

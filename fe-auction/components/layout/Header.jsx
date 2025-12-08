@@ -11,25 +11,19 @@ import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/s
 import { LogIn, Sun, Moon } from "lucide-react";
 
 function Header() {
-  const { user, role, setUser, setRole } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme, isDark } = useTheme();
 
-  // helper: cek role dari role (string) atau user.roles (array)
+  // helper: cek role dari user.roles (array)
   const hasRole = (r) => {
-    if (!r) return false;
-    if (role && typeof role === "string" && role.toLowerCase() === r.toLowerCase()) return true;
-    if (Array.isArray(user?.roles)) {
-      return user.roles.some((x) => String(x).toLowerCase() === r.toLowerCase());
-    }
-    return false;
+    if (!user || !Array.isArray(user.roles)) return false;
+    return user.roles.some((x) => String(x).toLowerCase() === r.toLowerCase());
   };
 
-  // Simulasi logout
-  const handleLogout = () => {
-    setUser(null);
-    setRole(null);
-    localStorage.removeItem("user");
+  // Logout handler
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (

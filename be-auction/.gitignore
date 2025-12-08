@@ -50,6 +50,6 @@ coverage/
 # Mac system files
 *.DS_Store
 
-EXP/
+# EXP/
 /generated/prisma
 # rest/
