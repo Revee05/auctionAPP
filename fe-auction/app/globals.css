@@ -120,3 +120,63 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar styles (WebKit + Firefox) */
+/* Uses CSS variables already defined in :root / .dark for color harmonization */
+:root {
+  --scrollbar-bg: rgba(0, 0, 0, 0.04);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+}
+.dark {
+  --scrollbar-bg: rgba(255, 255, 255, 0.04);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.28);
+}
+
+/* Firefox: thin + color */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+  border-radius: 9999px;
+}
+
+/* Use gradient based on the existing design tokens for a subtle, modern look */
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Slightly different gradient for dark mode to match darker surfaces */
+.dark *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--sidebar-primary), var(--sidebar-accent));
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  transform: scale(1.05);
+  filter: brightness(0.95);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Utility: make scrollbars a bit more visible on very small content */
+@media (prefers-reduced-motion: reduce) {
+  *::-webkit-scrollbar-thumb {
+    transition: none;
+  }
+}
