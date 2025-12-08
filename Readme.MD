@@ -1,8 +1,7 @@
 
 **AuctionAPP**
 
-- **Deskripsi**: Aplikasi lelang (fullstack) dengan back-end berbasis Fastify + Prisma dan front-end menggunakan Next.js. Proyek ini berisi implementasi otentikasi (access + refresh token, rotasi refresh token), RBAC dasar, dan contoh seed data untuk pengembangan.
-- **Branch penting**: repository ini disimpan pada branch `AUTH-Only(Dont_Change_This_File)`. Jangan mengubah file ini di branch lain tanpa koordinasi.
+- **Deskripsi**: Proyek ini berisi implementasi otentikasi (access + refresh token, rotasi refresh token), RBAC dasar, dan contoh seed data untuk pengembangan.
 
 **Struktur Proyek (ringkasan)**
 - `be-auction/`: server back-end
