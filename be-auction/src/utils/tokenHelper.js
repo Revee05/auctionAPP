@@ -37,6 +37,10 @@ const COOKIE_SECURE = process.env.NODE_ENV === "production";
 const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "strict";
 const COOKIE_PATH = process.env.COOKIE_PATH || "/";
 
+/* Refresh token hashing config */
+const REFRESH_TOKEN_HASH_SECRET = process.env.REFRESH_TOKEN_HASH_SECRET || "your-refresh-token-hash-secret-change-in-production-use-strong-random-value";
+const REFRESH_TOKEN_BYTES = parseInt(process.env.REFRESH_TOKEN_BYTES || "64", 10);
+
 /**
  * generateAccessToken
  * - Membuat JWT signed berisi payload yang diberikan.
@@ -69,7 +73,23 @@ export function verifyAccessToken(token) {
  * @returns {String} refresh token random
  */
 export function generateRefreshToken() {
-  return crypto.randomBytes(64).toString("hex");
+  return crypto.randomBytes(REFRESH_TOKEN_BYTES).toString("hex");
+}
+
+/**
+ * hashRefreshToken
+ * - Membuat HMAC-SHA256 hash dari refresh token dengan secret key.
+ * - Hash ini yang disimpan di database, bukan plain token.
+ * - Menggunakan HMAC untuk menambah secret sehingga lebih aman dari preimage attacks.
+ *
+ * @param {String} token - Plain refresh token
+ * @returns {String} hex hash dari token
+ */
+export function hashRefreshToken(token) {
+  return crypto
+    .createHmac("sha256", REFRESH_TOKEN_HASH_SECRET)
+    .update(token)
+    .digest("hex");
 }
 
 /**
@@ -152,6 +172,7 @@ export default {
   generateAccessToken,
   verifyAccessToken,
   generateRefreshToken,
+  hashRefreshToken,
   getRefreshTokenExpiryDate,
   getCookieOptions,
   getRefreshCookieOptions,

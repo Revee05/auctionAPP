@@ -46,7 +46,7 @@ export const authService = {
   // ============================================
   // LOGIN - Masuk ke sistem
   // ============================================
-  async login(email, password) {
+  async login(email, password, reqMeta = {}) {
     // Find user with roles
     const user = await prisma.user.findUnique({
       where: { email },
@@ -79,22 +79,25 @@ export const authService = {
       roles
     })
 
-    // Generate refresh token (long-lived)
-    const refreshToken = tokenHelper.generateRefreshToken()
+    // Generate refresh token (long-lived) with hash
+    const plainRefreshToken = tokenHelper.generateRefreshToken()
+    const tokenHash = tokenHelper.hashRefreshToken(plainRefreshToken)
     const refreshTokenExpiry = tokenHelper.getRefreshTokenExpiryDate()
 
-    // Save refresh token to database
+    // Save ONLY hash to database (not plain token)
     await prisma.refreshToken.create({
       data: {
-        token: refreshToken,
+        tokenHash,
         userId: user.id,
-        expiresAt: refreshTokenExpiry
+        expiresAt: refreshTokenExpiry,
+        deviceInfo: reqMeta.deviceInfo || null,
+        ip: reqMeta.ip || null
       }
     })
 
     return {
       accessToken,
-      refreshToken,
+      refreshToken: plainRefreshToken, // Send plain token to client as cookie
       user: {
         id: user.id,
         name: user.name,
@@ -105,68 +108,132 @@ export const authService = {
   },
 
   // ============================================
-  // REFRESH TOKEN - Dapatkan access token baru
+  // REFRESH TOKEN - Dapatkan access token baru dengan rotation
   // ============================================
-  async refreshAccessToken(refreshToken) {
-    // Find refresh token in database
-    const storedToken = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
-      include: {
-        user: {
-          include: {
-            roles: {
-              include: {
-                role: true
+  async refreshAccessToken(plainRefreshToken, reqMeta = {}) {
+    if (!plainRefreshToken) {
+      throw new Error('Refresh token required')
+    }
+
+    const tokenHash = tokenHelper.hashRefreshToken(plainRefreshToken)
+
+    // Check for reuse detection OUTSIDE transaction to ensure revocation is committed
+    const revokedToken = await prisma.refreshToken.findFirst({
+      where: {
+        tokenHash,
+        revoked: true
+      }
+    })
+
+    if (revokedToken) {
+      // Token reuse detected! Revoke all sessions (outside transaction)
+      console.error(`[SECURITY] Refresh token reuse detected for userId: ${revokedToken.userId}, ip: ${reqMeta.ip}`)
+      await prisma.refreshToken.updateMany({
+        where: { userId: revokedToken.userId },
+        data: { revoked: true }
+      })
+      throw new Error('Refresh token reuse detected. All sessions revoked.')
+    }
+
+    // Use transaction for atomic rotation
+    return await prisma.$transaction(async (tx) => {
+      // Find valid token by hash
+      const storedToken = await tx.refreshToken.findFirst({
+        where: {
+          tokenHash,
+          revoked: false,
+          expiresAt: { gt: new Date() }
+        },
+        include: {
+          user: {
+            include: {
+              roles: {
+                include: {
+                  role: true
+                }
               }
             }
           }
         }
+      })
+
+      if (!storedToken) {
+        throw new Error('Invalid or expired refresh token')
       }
-    })
 
-    if (!storedToken) {
-      throw new Error('Invalid refresh token')
-    }
+      // Token rotation: create new token
+      const newPlainToken = tokenHelper.generateRefreshToken()
+      const newTokenHash = tokenHelper.hashRefreshToken(newPlainToken)
+      const newExpiry = tokenHelper.getRefreshTokenExpiryDate()
 
-    // Check if token expired
-    if (storedToken.expiresAt < new Date()) {
-      // Delete expired token
-      await prisma.refreshToken.delete({ where: { id: storedToken.id } })
-      throw new Error('Refresh token expired')
-    }
+      // Insert new token
+      await tx.refreshToken.create({
+        data: {
+          tokenHash: newTokenHash,
+          userId: storedToken.userId,
+          expiresAt: newExpiry,
+          deviceInfo: reqMeta.deviceInfo || storedToken.deviceInfo,
+          ip: reqMeta.ip || storedToken.ip
+        }
+      })
 
-    // Extract role names
-    const roles = storedToken.user.roles.map(ur => ur.role.name)
+      // Revoke old token (conditional update to handle race conditions)
+      const updated = await tx.refreshToken.updateMany({
+        where: {
+          id: storedToken.id,
+          revoked: false
+        },
+        data: {
+          revoked: true,
+          lastUsedAt: new Date()
+        }
+      })
 
-    // Generate new access token
-    const accessToken = tokenHelper.generateAccessToken({
-      userId: storedToken.user.id,
-      email: storedToken.user.email,
-      roles
-    })
+      if (updated.count === 0) {
+        // Race condition: token already processed
+        console.warn(`[SECURITY] Concurrent token rotation detected for userId: ${storedToken.userId}`)
+        throw new Error('Concurrent token rotation detected')
+      }
 
-    return {
-      accessToken,
-      user: {
-        id: storedToken.user.id,
-        name: storedToken.user.name,
+      // Extract role names
+      const roles = storedToken.user.roles.map(ur => ur.role.name)
+
+      // Generate new access token
+      const accessToken = tokenHelper.generateAccessToken({
+        userId: storedToken.user.id,
         email: storedToken.user.email,
         roles
+      })
+
+      console.log(`[AUTH] Token rotated for userId: ${storedToken.userId}, ip: ${reqMeta.ip}`)
+
+      return {
+        accessToken,
+        refreshToken: newPlainToken, // New plain token for client cookie
+        user: {
+          id: storedToken.user.id,
+          name: storedToken.user.name,
+          email: storedToken.user.email,
+          roles
+        }
       }
-    }
+    })
   },
 
   // ============================================
   // LOGOUT - Hapus refresh token
   // ============================================
-  async logout(refreshToken) {
-    if (!refreshToken) {
+  async logout(plainRefreshToken) {
+    if (!plainRefreshToken) {
       return
     }
 
-    // Delete refresh token from database
-    await prisma.refreshToken.deleteMany({
-      where: { token: refreshToken }
+    const tokenHash = tokenHelper.hashRefreshToken(plainRefreshToken)
+
+    // Revoke refresh token (soft delete)
+    await prisma.refreshToken.updateMany({
+      where: { tokenHash },
+      data: { revoked: true, lastUsedAt: new Date() }
     })
   },
 
@@ -174,9 +241,10 @@ export const authService = {
   // LOGOUT ALL - Hapus semua refresh token user
   // ============================================
   async logoutAll(userId) {
-    // Delete all refresh tokens for this user
-    await prisma.refreshToken.deleteMany({
-      where: { userId }
+    // Revoke all refresh tokens for this user (soft delete)
+    await prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { revoked: true, lastUsedAt: new Date() }
     })
   },
 

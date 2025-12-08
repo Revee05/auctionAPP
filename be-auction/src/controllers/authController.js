@@ -42,7 +42,13 @@ export const authController = {
         });
       }
 
-      const result = await authService.login(email, password);
+      // Capture request metadata for security
+      const reqMeta = {
+        ip: request.ip || request.headers['x-forwarded-for'] || request.socket.remoteAddress,
+        deviceInfo: request.headers['user-agent'] || 'unknown'
+      };
+
+      const result = await authService.login(email, password, reqMeta);
 
       // Set access token di HTTP-only cookie (names/options from env via helper)
       reply.setCookie(
@@ -68,7 +74,7 @@ export const authController = {
   },
 
   // =========================
-  // REFRESH - Perbarui access token
+  // REFRESH - Perbarui access token dengan rotation
   // =========================
   async refresh(request, reply) {
     try {
@@ -78,13 +84,26 @@ export const authController = {
         return reply.status(401).send({ error: "No refresh token provided" });
       }
 
-      const result = await authService.refreshAccessToken(refreshToken);
+      // Capture request metadata for security
+      const reqMeta = {
+        ip: request.ip || request.headers['x-forwarded-for'] || request.socket.remoteAddress,
+        deviceInfo: request.headers['user-agent'] || 'unknown'
+      };
 
-      // Set access token baru di cookie
+      const result = await authService.refreshAccessToken(refreshToken, reqMeta);
+
+      // Set NEW access token di cookie
       reply.setCookie(
         tokenHelper.ACCESS_COOKIE_NAME,
         result.accessToken,
         tokenHelper.getCookieOptions()
+      );
+
+      // Set NEW refresh token di cookie (rotation)
+      reply.setCookie(
+        tokenHelper.REFRESH_COOKIE_NAME,
+        result.refreshToken,
+        tokenHelper.getRefreshCookieOptions()
       );
 
       return reply.send({
@@ -92,6 +111,9 @@ export const authController = {
         user: result.user,
       });
     } catch (error) {
+      // Clear cookies on reuse detection or other errors
+      reply.clearCookie(tokenHelper.ACCESS_COOKIE_NAME, { path: "/" });
+      reply.clearCookie(tokenHelper.REFRESH_COOKIE_NAME, { path: "/" });
       return reply.status(401).send({ error: error.message });
     }
   },
