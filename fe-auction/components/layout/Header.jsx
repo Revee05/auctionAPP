@@ -127,21 +127,16 @@ function Header() {
       </div>
       {/* Mobile: gunakan Sheet (muncul dari kanan) */}
       <Sheet>
+        {/* humburger menu icon */}
         <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            className="md:hidden flex items-center justify-center p-2 ml-2 hover:bg-transparent focus:ring-0"
-            aria-label="Open menu"
-          >
+          <Button variant="ghost" className="md:hidden flex items-center justify-center p-2 ml-2 hover:bg-transparent focus:ring-0" aria-label="Open menu">
             <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </Button>
         </SheetTrigger>
-        <SheetContent
-          side="right"
-          className={`w-72 md:hidden p-4 backdrop-blur-sm shadow-2xl rounded-l-lg ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border-l border-zinc-800 text-white' : 'bg-white/90 border-l border-zinc-200 text-zinc-900'}`}
-        >
+        {/* isi content dalam sheet */}
+        <SheetContent side="right" className={`w-full sm:w-72 md:hidden p-4 backdrop-blur-sm shadow-2xl rounded-l-lg ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 border-l border-zinc-800 text-white' : 'bg-white/90 border-l border-zinc-200 text-zinc-900'}`}>
           {/* Top: user or auth actions */}
           <div className={`flex items-center gap-3 px-1 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
             {user ? (
@@ -211,11 +206,11 @@ function Header() {
             )}
           </nav>
 
-          <div className={`${isDark ? 'mt-4 border-t border-zinc-200/60 pt-3 text-xs text-zinc-400 px-1' : 'mt-4 border-t border-zinc-800/60 pt-3 text-xs text-zinc-500 px-1'}`}>
+          <div className={`${isDark ? 'my-3 border-t border-zinc-200/60 pt-3 text-xs text-zinc-400 px-3' : 'my-3 border-t border-zinc-800/60 pt-3 text-xs text-zinc-500 px-1'}`}>
             <div className="flex items-center justify-between">
-              <span>Theme</span>
+              <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Theme</span>
               <button onClick={toggleTheme} aria-label="Toggle color theme" className="p-2 rounded-lg hover:bg-zinc-800/60">
-                {isDark ? <Sun className="w-5 h-5 text-zinc-100" /> : <Moon className="w-5 h-5 text-zinc-100" />}
+                {isDark ? <Sun className="w-5 h-5 text-zinc-300" /> : <Moon className="w-5 h-5 text-zinc-500" />}
               </button>
             </div>
             <div className="mt-3 text-center text-zinc-500">© {new Date().getFullYear()} ArtAuction</div>
