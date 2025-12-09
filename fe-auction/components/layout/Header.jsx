@@ -8,7 +8,7 @@ import { useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
-import { LogIn, Sun, Moon } from "lucide-react";
+import { LogIn, Sun, Moon, Home, Gavel, Film, Video } from "lucide-react";
 
 function Header() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -35,13 +35,16 @@ function Header() {
       </div>
       {/* Tengah: Navigasi (hidden on mobile, selalu di tengah) */}
       <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-        <Link href="/" className="flex items-center gap-1 hover:underline">
+        <Link href="/" className="flex items-center gap-2 hover:underline">
+          <Home className={`w-4 h-4 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
           <span>Home</span>
         </Link>
-        <Link href="/auctions" className="flex items-center gap-1 hover:underline">
+        <Link href="/auctions" className="flex items-center gap-2 hover:underline">
+          <Gavel className={`w-4 h-4 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
           <span>Auctions</span>
         </Link>
-        <Link href="/reels" className="flex items-center gap-1 hover:underline">
+        <Link href="/reels" className="flex items-center gap-2 hover:underline">
+          <Film className={`w-4 h-4 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
           <span>Reels</span>
         </Link>
         {/* RBAC: Navigasi khusus role */}
@@ -161,22 +164,22 @@ function Header() {
 
           <nav className="flex flex-col gap-1">
             <SheetClose asChild>
-              <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
-                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6" /></svg>
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Home</span>
-              </Link>
+                <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
+                  <Home className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
+                  <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Home</span>
+                </Link>
             </SheetClose>
 
             <SheetClose asChild>
               <Link href="/auctions" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
-                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+                <Gavel className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
                 <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Auctions</span>
               </Link>
             </SheetClose>
 
             <SheetClose asChild>
               <Link href="/reels" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
-                <svg className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h.01M4 12h.01M4 18h.01" /></svg>
+                <Film className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
                 <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Reels</span>
               </Link>
             </SheetClose>
