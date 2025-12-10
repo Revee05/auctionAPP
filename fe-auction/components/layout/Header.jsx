@@ -45,7 +45,7 @@ function Header() {
         </Link>
         <Link href="/reels" className="flex items-center gap-2 hover:underline">
           <Film className={`w-4 h-4 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
-          <span>Reels</span>
+          <span>Feeds</span>
         </Link>
         {/* RBAC: Navigasi khusus role */}
         {hasRole("artist") && (
@@ -180,7 +180,7 @@ function Header() {
             <SheetClose asChild>
               <Link href="/reels" className={`flex items-center gap-3 px-3 py-3 rounded-lg transition ${isDark ? 'hover:bg-zinc-800/60' : 'hover:bg-zinc-100'}`}>
                 <Film className={`w-5 h-5 ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`} aria-hidden />
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Reels</span>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-zinc-900'}`}>Feeds</span>
               </Link>
             </SheetClose>
 
