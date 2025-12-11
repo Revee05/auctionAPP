@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 // Dynamic import untuk Canvas (SSR: false)
 const Hero3D = dynamic(() => import("@/components/3d/Hero3D"), {
@@ -22,6 +23,7 @@ const Hero3D = dynamic(() => import("@/components/3d/Hero3D"), {
 export default function HeroSection() {
   const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Detect theme changes
   useEffect(() => {
@@ -45,10 +47,8 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-[60vh] w-full overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-purple-50/30 dark:from-black dark:via-zinc-950 dark:to-purple-950/20">
-      {/* Container utama (digabungkan) */}
-      {/* <div className="container mx-auto h-full px-4 pt-2 pb-8 lg:px-8 lg:pt-3 grid h-full min-h-[60vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12"> */}
-      <div className="container mx-auto h-full px-4 pt-2 pb-8 lg:px-8 lg:pt-3 grid h-full min-h-[60vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          
+      {/* Container utama */}
+      <div className="container mx-auto h-full px-4 pt-16 pb-8 lg:px-8 lg:pt-20 grid h-full min-h-[60vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Text Content - Kiri/Atas */}
           <div className="z-10 flex flex-col justify-center space-y-6 lg:space-y-8">
             {/* Badge */}
@@ -87,15 +87,17 @@ export default function HeroSection() {
                 <div className="absolute inset-0 -z-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-0 transition-opacity group-hover:opacity-100" />
               </Button>
 
-              {/* Secondary CTA */}
-              <Button
-                onClick={() => router.push("/auth/register")}
-                size="lg"
-                variant="outline"
-                className="border-2 border-zinc-300 bg-transparent hover:border-purple-500 hover:bg-purple-50 dark:border-zinc-700 dark:hover:border-purple-500 dark:hover:bg-purple-950/30"
-              >
-                Get Started
-              </Button>
+              {/* Secondary CTA (sembunyikan jika sudah terautentikasi) */}
+              {!isAuthenticated && (
+                <Button
+                  onClick={() => router.push("/auth/register")}
+                  size="lg"
+                  variant="outline"
+                  className="border-2 border-zinc-300 bg-transparent hover:border-purple-500 hover:bg-purple-50 dark:border-zinc-700 dark:hover:border-purple-500 dark:hover:bg-purple-950/30"
+                >
+                  Get Started
+                </Button>
+              )}
             </div>
 
             {/* Stats */}

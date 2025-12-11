@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import useTheme from "@/hooks/useTheme";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetTrigger, SheetContent, SheetClose } from "@/components/ui/sheet";
@@ -14,22 +14,6 @@ function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme, isDark } = useTheme();
-
-  // track whether header is at top of the page (for transparent style)
-  const [isAtTop, setIsAtTop] = useState(true);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onScroll = () => {
-      setIsAtTop(window.scrollY <= 8);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // provide a simple border class fallback when not at top
-  const borderClass = isAtTop ? "" : (isDark ? "border-b border-zinc-800/20" : "border-b border-zinc-200/60");
 
   // helper: cek role dari user.roles (array)
   const hasRole = (r) => {
@@ -43,12 +27,7 @@ function Header() {
   };
 
   return (
-    <header
-      className={`flex items-center justify-between px-4 py-3 w-full relative sticky top-0 z-50
-        ${isAtTop ? 'bg-transparent shadow-none backdrop-blur-0' : 'shadow-2xl backdrop-blur-sm backdrop-saturate-150'}
-        ${isAtTop ? (isDark ? 'text-white' : 'text-zinc-900') : (isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white' : 'bg-white/80 text-zinc-900')}
-        ${borderClass} transition-colors duration-200`}
-    >
+    <header className={`flex items-center justify-between px-4 py-3 w-full relative sticky top-0 z-50 shadow-2xl backdrop-blur-sm backdrop-saturate-150 ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white border-b border-zinc-800' : 'bg-white/80 text-zinc-900 border-b border-zinc-200'}`}>
       {/* Kiri: Logo */}
       <div className="flex items-center gap-2">
         <div className="rounded-lg bg-purple-400 w-8 h-8" />

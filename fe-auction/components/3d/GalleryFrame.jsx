@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { useCursor } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,6 +13,7 @@ export default function GalleryFrame({
   isDarkMode = false, 
   position = [0, 0, 0],
   artworkColors = null,
+  artworkSrc = null, // optional image placeholder URL
   disableAnimation = false 
 }) {
   const groupRef = useRef();
@@ -106,8 +107,45 @@ export default function GalleryFrame({
     return texture;
   })();
 
+  // Default to a WebP sample placed under `public/images/sample.webp` (preferred)
+  // If you want a different image, pass `artworkSrc` prop or replace the file in `public/images/`.
+  // Use server-side proxy to avoid CORS issues when loading remote images
+  const proxied = "/api/image-proxy?url=" + encodeURIComponent("https://www.gstatic.com/webp/gallery/1.webp");
+  const defaultSample = proxied;
+  const srcToLoad = artworkSrc || defaultSample;
+
+  const [imageTexture, setImageTexture] = useState(null);
+  useEffect(() => {
+    // Use a DOM Image to ensure crossOrigin is applied consistently
+    let mounted = true;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = srcToLoad;
+    img.onload = () => {
+      if (!mounted) return;
+      try {
+        const tex = new THREE.Texture(img);
+        tex.anisotropy = 16;
+        tex.needsUpdate = true;
+        setImageTexture(tex);
+      } catch (e) {
+        if (mounted) setImageTexture(null);
+      }
+    };
+    img.onerror = () => {
+      if (mounted) setImageTexture(null);
+    };
+    return () => {
+      mounted = false;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [srcToLoad]);
+
+  const finalTexture = imageTexture || canvasTexture;
+
   const artworkMaterial = new THREE.MeshStandardMaterial({
-    map: canvasTexture,
+    map: finalTexture,
     roughness: 0.6,
     metalness: 0.1,
   });
