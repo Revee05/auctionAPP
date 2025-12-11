@@ -40,8 +40,8 @@ export default function FrameCarousel({ isDarkMode = false }) {
     carouselRef.current.position.y = Math.sin(time * 0.5) * 0.15;
   });
 
-  // Circular arrangement
-  const radius = 5.5;
+  // Circular arrangement dengan radius optimal untuk full visibility
+  const radius = 6.5;
   const frameCount = artworks.length;
 
   return (

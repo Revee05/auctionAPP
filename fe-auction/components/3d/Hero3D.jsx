@@ -15,12 +15,12 @@ function Scene({ isDarkMode }) {
 
   return (
     <>
-      {/* Camera optimal untuk rotating carousel */}
+      {/* Camera optimal untuk full carousel view tanpa cropping */}
       <PerspectiveCamera
         ref={cameraRef}
         makeDefault
-        position={[0, 2.5, 12]}
-        fov={55}
+        position={[0, 2, 14]}
+        fov={60}
       />
 
       {/* Orbit Controls - smooth interaction dengan carousel */}

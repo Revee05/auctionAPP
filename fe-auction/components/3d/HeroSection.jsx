@@ -63,6 +63,7 @@ export default function HeroSection() {
             {/* Heading */}
             <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-5xl lg:text-6xl xl:text-7xl">
               Discover{" "}
+              <br></br>
               <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
                 Curated Art
               </span>
@@ -126,13 +127,15 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* 3D Canvas - Kanan/Bawah */}
-          <div className="relative h-[400px] w-full lg:h-[600px]">
-            {/* Glow effect background */}
-            <div className="absolute inset-0 bg-gradient-radial from-purple-500/20 via-transparent to-transparent blur-3xl" />
+          {/* 3D Canvas - Kanan/Bawah - Extended Width (glow behind canvas) */}
+          <div className="relative -mr-16 h-[400px] w-[calc(100%+rem)] lg:-mr-32 lg:h-[600px] lg:w-[calc(100%+16rem)]">
+            {/* Glow effect background - reduced intensity so it doesn't obstruct */}
+            <div className="absolute inset-0 -z-30 bg-gradient-radial from-purple-500/8 via-transparent to-transparent blur-2xl opacity-60" />
             
-            {/* 3D Scene */}
-            <Hero3D isDarkMode={isDarkMode} className="relative z-10" />
+            {/* 3D Scene positioned above glow but below UI (text/buttons) */}
+            <div className="absolute inset-0 z-0">
+              <Hero3D isDarkMode={isDarkMode} className="h-full w-full" />
+            </div>
           </div>
 
         </div>
@@ -140,11 +143,11 @@ export default function HeroSection() {
 
       {/* Decorative Elements */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Top gradient */}
-        <div className="absolute -top-40 right-0 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl dark:bg-purple-500/5" />
+        {/* Top gradient - smaller, softer and placed behind 3D */}
+        <div className="absolute -top-28 right-0 h-56 w-56 rounded-full bg-purple-500/6 blur-2xl dark:bg-purple-500/6 -z-50" />
         
-        {/* Bottom gradient */}
-        <div className="absolute -bottom-40 left-0 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl dark:bg-pink-500/5" />
+        {/* Bottom gradient - smaller, softer and placed behind 3D */}
+        <div className="absolute -bottom-28 left-0 h-56 w-56 rounded-full bg-pink-500/6 blur-2xl dark:bg-pink-500/6 -z-50" />
       </div>
     </section>
   );
