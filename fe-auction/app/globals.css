@@ -173,7 +173,9 @@
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
-
+/* div {
+  border: 1px solid crimson !important;
+} */
 /* Utility: make scrollbars a bit more visible on very small content */
 @media (prefers-reduced-motion: reduce) {
   *::-webkit-scrollbar-thumb {

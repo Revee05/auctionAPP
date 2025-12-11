@@ -44,10 +44,10 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-[80vh] w-full overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-purple-50/30 dark:from-black dark:via-zinc-950 dark:to-purple-950/20">
-      {/* Container utama */}
-      <div className="container mx-auto h-full px-4 py-12 lg:px-8">
-        <div className="grid h-full min-h-[80vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
+    <section className="relative min-h-[60vh] w-full overflow-hidden bg-gradient-to-br from-zinc-50 via-white to-purple-50/30 dark:from-black dark:via-zinc-950 dark:to-purple-950/20">
+      {/* Container utama (digabungkan) */}
+      {/* <div className="container mx-auto h-full px-4 pt-2 pb-8 lg:px-8 lg:pt-3 grid h-full min-h-[60vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12"> */}
+      <div className="container mx-auto h-full px-4 pt-2 pb-8 lg:px-8 lg:pt-3 grid h-full min-h-[60vh] grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
           
           {/* Text Content - Kiri/Atas */}
           <div className="z-10 flex flex-col justify-center space-y-6 lg:space-y-8">
@@ -63,7 +63,7 @@ export default function HeroSection() {
             {/* Heading */}
             <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-5xl lg:text-6xl xl:text-7xl">
               Discover{" "}
-              <br></br>
+              {/* <br></br> */}
               <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
                 Curated Art
               </span>
@@ -128,7 +128,8 @@ export default function HeroSection() {
           </div>
 
           {/* 3D Canvas - Kanan/Bawah - Extended Width (glow behind canvas) */}
-          <div className="relative -mr-16 h-[400px] w-[calc(100%+rem)] lg:-mr-32 lg:h-[600px] lg:w-[calc(100%+16rem)]">
+          <div className="relative h-full w-full lg:w-[100%] lg:ml-auto lg:h-full">
+
             {/* Glow effect background - reduced intensity so it doesn't obstruct */}
             <div className="absolute inset-0 -z-30 bg-gradient-radial from-purple-500/8 via-transparent to-transparent blur-2xl opacity-60" />
             
@@ -138,7 +139,6 @@ export default function HeroSection() {
             </div>
           </div>
 
-        </div>
       </div>
 
       {/* Decorative Elements */}
