@@ -340,10 +340,10 @@ export default function UserManagement() {
             <div className="p-2 bg-blue-600/20 rounded-lg">
               <Shield className="w-5 h-5 text-blue-400" />
             </div>
-            <div>
-              <p className="text-zinc-400 text-xs">Total Users</p>
-              <p className="text-2xl font-bold text-white">{totals.totalUsers ?? totalLoaded}</p>
-            </div>
+              <div>
+                <p className="text-zinc-600 dark:text-zinc-400 text-xs">Total Users</p>
+                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{totals.totalUsers ?? totalLoaded}</p>
+              </div>
           </div>
         </Card>
         <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-4">
@@ -351,10 +351,10 @@ export default function UserManagement() {
             <div className="p-2 bg-green-600/20 rounded-lg">
               <Shield className="w-5 h-5 text-green-400" />
             </div>
-            <div>
-              <p className="text-zinc-400 text-xs">Active Users</p>
-              <p className="text-2xl font-bold text-white">{totals.activeUsers ?? currentUsers.filter((u) => u.status === "active").length}</p>
-            </div>
+              <div>
+                <p className="text-zinc-600 dark:text-zinc-400 text-xs">Active Users</p>
+                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{totals.activeUsers ?? currentUsers.filter((u) => u.status === "active").length}</p>
+              </div>
           </div>
         </Card>
         <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-4">
@@ -363,8 +363,8 @@ export default function UserManagement() {
               <Shield className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs">Admins</p>
-              <p className="text-2xl font-bold text-white">{totals.adminCount ?? currentUsers.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}</p>
+              <p className="text-zinc-600 dark:text-zinc-400 text-xs">Admins</p>
+              <p className="text-2xl font-bold text-zinc-900 dark:text-white">{totals.adminCount ?? currentUsers.filter((u) => u.role === "ADMIN" || u.role === "SUPER_ADMIN").length}</p>
             </div>
           </div>
         </Card>
