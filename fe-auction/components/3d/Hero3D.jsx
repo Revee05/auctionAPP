@@ -3,35 +3,36 @@
 import { Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, PerspectiveCamera } from "@react-three/drei";
-import AbstractShape from "./AbstractShape";
+import FrameCarousel from "./FrameCarousel";
 import Lighting from "./Lighting";
 
 /**
  * Hero 3D Scene Component
- * Canvas dengan kontrol, environment, dan scene 3D
+ * Canvas dengan kontrol, environment, dan gallery frame 3D
  */
 function Scene({ isDarkMode }) {
   const cameraRef = useRef();
 
   return (
     <>
-      {/* Camera dengan FOV optimal */}
+      {/* Camera optimal untuk rotating carousel */}
       <PerspectiveCamera
         ref={cameraRef}
         makeDefault
-        position={[0, 0, 8]}
-        fov={45}
+        position={[0, 2.5, 12]}
+        fov={55}
       />
 
-      {/* Orbit Controls dengan parallax subtle */}
+      {/* Orbit Controls - smooth interaction dengan carousel */}
       <OrbitControls
         enableZoom={false}
         enablePan={false}
-        maxPolarAngle={Math.PI / 2}
+        maxPolarAngle={Math.PI / 1.8}
         minPolarAngle={Math.PI / 3}
         autoRotate={false}
         enableDamping
         dampingFactor={0.05}
+        rotateSpeed={0.5}
       />
 
       {/* Environment preset berdasarkan theme */}
@@ -41,11 +42,11 @@ function Scene({ isDarkMode }) {
         blur={0.8}
       />
 
-      {/* Lighting Component */}
+      {/* Lighting Component - Gallery style */}
       <Lighting isDarkMode={isDarkMode} />
 
-      {/* Abstract Shape */}
-      <AbstractShape isDarkMode={isDarkMode} />
+      {/* Frame Carousel with Multiple Artworks */}
+      <FrameCarousel isDarkMode={isDarkMode} />
     </>
   );
 }
