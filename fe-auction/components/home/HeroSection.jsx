@@ -52,10 +52,10 @@ export default function HeroSection() {
           {/* Text Content - Kiri/Atas */}
           <div className="z-10 flex flex-col justify-center space-y-6 lg:space-y-8">
             {/* Badge */}
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-purple-200 bg-purple-50/50 px-4 py-1.5 text-sm font-medium text-purple-700 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-300">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-red-200 bg-red-50/50 px-4 py-1.5 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-500"></span>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
               </span>
               Live Auction
             </div>
