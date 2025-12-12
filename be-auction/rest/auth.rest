@@ -7,7 +7,7 @@
 
 # Kredensial siap pakai (ubah di sini saja)
 @superEmail = superadmin@auctionapp.com
-@superPass = Password123!
+@superPass = password123!
 @adminEmail = admin@auctionapp.com
 @adminPass = Password123!
 @artistEmail = mike.sculptor@auctionapp.com
