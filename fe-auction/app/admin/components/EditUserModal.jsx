@@ -82,6 +82,7 @@ export default function EditUserModal({ open, user, onClose, onSaved }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="edit password"
               className="mt-1"
             />
           </div>
