@@ -175,6 +175,25 @@ class AuthService {
   }
 
   /**
+   * Update user profile
+   * @param {Object} data - Profile data to update
+   * @param {string} data.name - User's name
+   * @param {string} data.avatarUrl - User's avatar URL
+   */
+  async updateProfile(data) {
+    try {
+      const response = await apiClient.put(config.auth.endpoints.profile, data);
+      return {
+        success: true,
+        user: response.data.user,
+        message: response.data.message,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Error handler - extracts meaningful error messages
    */
   handleError(error) {
@@ -189,6 +208,7 @@ class AuthService {
       const err = new Error(message);
       err.code = errorData?.code;
       err.statusCode = error.response.status;
+      err.details = errorData?.details; // Include validation details
       
       return err;
     } else if (error.request) {

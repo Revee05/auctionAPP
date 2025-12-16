@@ -58,7 +58,8 @@ const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 const ACCESS_COOKIE_NAME = process.env.ACCESS_COOKIE_NAME || "access_token";
 const REFRESH_COOKIE_NAME = process.env.REFRESH_COOKIE_NAME || "refresh_token";
 const COOKIE_SECURE = process.env.NODE_ENV === "production";
-const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "strict";
+// Use 'lax' by default for development to allow cross-site XHR from localhost dev frontend
+const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "lax";
 const COOKIE_PATH = process.env.COOKIE_PATH || "/";
 
 const REFRESH_TOKEN_BYTES = parseInt(process.env.REFRESH_TOKEN_BYTES || "64", 10);

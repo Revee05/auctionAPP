@@ -16,6 +16,7 @@ export const config = {
       logoutAll: '/api/auth/logout-all',
       refresh: '/api/auth/refresh',
       me: '/api/auth/me',
+      profile: '/api/auth/profile',
       status: '/api/auth/status',
       verifyEmail: '/api/auth/verify-email',
       resendVerification: '/api/auth/resend-verification',

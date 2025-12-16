@@ -44,14 +44,17 @@ export default function UserManagement() {
 
       const response = await apiClient.get(endpoint, { params })
 
-      const transformedUsers = response.data.users.map(user => ({
+      // Ensure users is always an array
+      const usersData = Array.isArray(response.data.users) ? response.data.users : [];
+      
+      const transformedUsers = usersData.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
         role: Array.isArray(user.roles) && user.roles.length > 0
           ? user.roles[0]
           : "USER",
-        roles: user.roles || [],
+        roles: Array.isArray(user.roles) ? user.roles : [],
         // Normalize status from backend enums (e.g. "ACTIVE") to lowercase keys ("active")
         status: user.status ? String(user.status).toLowerCase() : "active",
         createdAt: user.createdAt,

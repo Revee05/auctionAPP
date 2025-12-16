@@ -31,7 +31,7 @@ export const nameSchema = z.string()
   .min(2, 'Name must be at least 2 characters')
   .max(100, 'Name must not exceed 100 characters')
   .trim()
-  .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
+  .regex(/^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes');
 
 /* ============================================
  * Role validation (enum)

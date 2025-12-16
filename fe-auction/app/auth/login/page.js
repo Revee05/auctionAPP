@@ -48,14 +48,20 @@ export default function LoginPage() {
           router.push("/");
         }
       } else {
-        setError(result.error || "Login failed");
+        const errorMessage = result.error || "Login failed";
+        setError(errorMessage);
+        
+        // Check if it's email not verified error from the error message
+        if (errorMessage.includes("verify your email") || errorMessage.includes("EMAIL_NOT_VERIFIED")) {
+          setShowResendLink(true);
+        }
       }
     } catch (err) {
       const errorMessage = err.message || "An unexpected error occurred";
       setError(errorMessage);
       
       // Check if it's email not verified error
-      if (err.code === "EMAIL_NOT_VERIFIED") {
+      if (err.code === "EMAIL_NOT_VERIFIED" || errorMessage.includes("verify your email")) {
         setShowResendLink(true);
       }
     } finally {

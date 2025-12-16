@@ -109,7 +109,7 @@ export const adminUserController = {
 
       const formattedUsers = pageItems.map(user => ({
         ...user,
-        roles: user.roles.map(ur => ur.role.name),
+        roles: Array.isArray(user.roles) ? user.roles.map(ur => ur.role.name) : [],
         status: user.status || 'ACTIVE'
       }))
 
@@ -165,7 +165,7 @@ export const adminUserController = {
       // Format roles jadi array string
       const formattedUser = {
         ...user,
-        roles: user.roles.map(ur => ur.role.name)
+        roles: Array.isArray(user.roles) ? user.roles.map(ur => ur.role.name) : []
       }
 
       // Jika requester BUKAN SUPER_ADMIN, jangan izinkan melihat user yang punya role SUPER_ADMIN

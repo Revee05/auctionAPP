@@ -54,7 +54,13 @@ export default function RegisterPage() {
         return;
       }
     } catch (err) {
-      setError(err.message || "Registration failed");
+      // Display detailed validation errors if available
+      if (err.statusCode === 400 && err.details) {
+        const errorMessages = err.details.map(d => `${d.field}: ${d.message}`).join('\n');
+        setError(errorMessages || err.message || "Registration failed");
+      } else {
+        setError(err.message || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +74,7 @@ export default function RegisterPage() {
 
         {error && (
           <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-2 rounded mb-4">
-            {error}
+            <div className="whitespace-pre-line">{error}</div>
           </div>
         )}
 
@@ -154,6 +160,9 @@ export default function RegisterPage() {
               className="text-white"
               required
             />
+            <p className="text-xs text-zinc-400 mt-1">
+              Must be 8+ characters with uppercase, lowercase, number, and special character
+            </p>
           </div>
 
           <Button 

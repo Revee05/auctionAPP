@@ -19,6 +19,13 @@ export function authorize(...allowedRoles) {
     
     // Jika tidak punya permission, kirim response 403 Forbidden
     if (!hasPermission) {
+      // Log helpful debug information in server logs (non-sensitive)
+      try {
+        console.warn('[RBAC] Access denied. Required:', allowedRoles, 'User roles:', userRoles, 'User:', request.user && { userId: request.user.userId, email: request.user.email });
+      } catch (e) {
+        // ignore logging errors
+      }
+
       return reply.status(403).send({ 
         error: 'Access denied. Insufficient permissions.',
         requiredRoles: allowedRoles, // Role yang dibutuhkan

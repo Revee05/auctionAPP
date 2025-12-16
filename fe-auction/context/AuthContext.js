@@ -31,7 +31,12 @@ export function AuthProvider({ children }) {
       const result = await authService.getCurrentUser();
       
       if (result.success && result.user) {
-        setUser(result.user);
+        // Ensure roles is always an array
+        const normalizedUser = {
+          ...result.user,
+          roles: Array.isArray(result.user.roles) ? result.user.roles : []
+        };
+        setUser(normalizedUser);
       } else {
         setUser(null);
       }
@@ -52,8 +57,13 @@ export function AuthProvider({ children }) {
       const result = await authService.login(email, password);
       
       if (result.success && result.user) {
-        setUser(result.user);
-        return { success: true, user: result.user };
+        // Ensure roles is always an array
+        const normalizedUser = {
+          ...result.user,
+          roles: Array.isArray(result.user.roles) ? result.user.roles : []
+        };
+        setUser(normalizedUser);
+        return { success: true, user: normalizedUser };
       }
       
       return { success: false, error: 'Login failed' };
@@ -101,7 +111,12 @@ export function AuthProvider({ children }) {
     try {
       const result = await authService.getCurrentUser();
       if (result.success && result.user) {
-        setUser(result.user);
+        // Ensure roles is always an array
+        const normalizedUser = {
+          ...result.user,
+          roles: Array.isArray(result.user.roles) ? result.user.roles : []
+        };
+        setUser(normalizedUser);
       }
     } catch (error) {
       console.error('Refresh user error:', error);

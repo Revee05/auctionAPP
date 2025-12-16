@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import apiClient from "@/lib/apiClient";
+import { authService } from "@/lib/services/authService";
 
 export default function ProfilePage() {
   return (
@@ -36,8 +36,8 @@ function ProfileContent() {
     setSuccess("");
 
     try {
-      // Call your update profile endpoint (adjust to your actual API)
-      await apiClient.put("/api/auth/profile", {
+      // Use authService to update profile
+      await authService.updateProfile({
         name: form.name,
         avatarUrl: form.avatarUrl,
       });
@@ -48,7 +48,7 @@ function ProfileContent() {
       setSuccess("Profile updated successfully!");
       setEditing(false);
     } catch (err) {
-      setError(err?.response?.data?.error || err?.message || "Failed to update profile");
+      setError(err?.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
