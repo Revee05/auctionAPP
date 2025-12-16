@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
 import { authRoutes } from './src/routes/authRoutes.js'
 import { adminUserRoutes } from './src/routes/admin/AdminRoutes.js'
 import { superAdminUserRoutes } from './src/routes/superadmin/SuperAdminRoutes.js'
@@ -29,6 +30,13 @@ fastify.register(fastifyCors, {
 fastify.register(fastifyCookie, {
   secret: process.env.COOKIE_SECRET || 'cookie-secret-key-change-in-production',
   parseOptions: {}
+})
+
+// Register rate limiting plugin
+fastify.register(rateLimit, {
+  global: false, // Apply only to specific routes
+  max: 100, // Default global limit
+  timeWindow: '15 minutes'
 })
 
 // Register routes

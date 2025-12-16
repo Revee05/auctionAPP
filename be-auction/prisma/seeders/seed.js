@@ -5,8 +5,8 @@ import "dotenv/config";
 
 async function main() {
   await seedRoles();
-  await seedUsers();
-  await seedUserRoles();
+  // await seedUsers();
+  // await seedUserRoles();
 }
 
 main().catch((e) => {
