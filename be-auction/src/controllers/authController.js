@@ -1,5 +1,6 @@
 import { authService } from "../services/authService.js";
 import tokenHelper from "../utils/tokenHelper.js";
+import { registerSchema, loginSchema, resendVerificationSchema, verifyEmailSchema, updateProfileSchema } from "../validators/authValidators.js";
 
 // ============================================
 // AUTH CONTROLLER - Cookie-based Authentication
@@ -11,18 +12,30 @@ export const authController = {
   // =========================
   async register(request, reply) {
     try {
-      const { name, email, password, roleName } = request.body;
-
-      if (!name || !email || !password) {
+      // Validate input
+      const validation = registerSchema.safeParse(request.body);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Name, email, and password are required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
 
-      await authService.register({ name, email, password, roleName });
+      const { name, email, password, roleName } = validation.data;
+
+      // Capture request metadata
+      const reqMeta = {
+        ip: request.ip || request.headers['x-forwarded-for'] || request.socket.remoteAddress,
+        deviceInfo: request.headers['user-agent'] || 'unknown'
+      };
+
+      await authService.register({ name, email, password, roleName }, reqMeta);
 
       return reply.status(201).send({
-        message: "Registration successful. Please login.",
+        message: "Registration successful. Please check your email to verify your account.",
       });
     } catch (error) {
       return reply.status(400).send({ error: error.message });
@@ -34,13 +47,19 @@ export const authController = {
   // =========================
   async login(request, reply) {
     try {
-      const { email, password } = request.body;
-
-      if (!email || !password) {
+      // Validate input
+      const validation = loginSchema.safeParse(request.body);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Email and password are required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
+
+      const { email, password } = validation.data;
 
       // Capture request metadata for security
       const reqMeta = {
@@ -69,6 +88,13 @@ export const authController = {
         user: result.user,
       });
     } catch (error) {
+      // Handle email verification error specifically
+      if (error.message === 'EMAIL_NOT_VERIFIED') {
+        return reply.status(403).send({ 
+          error: "Please verify your email before logging in. Check your inbox for verification link.",
+          code: "EMAIL_NOT_VERIFIED"
+        });
+      }
       return reply.status(401).send({ error: error.message });
     }
   },
@@ -176,8 +202,21 @@ export const authController = {
   // =========================
   async updateProfile(request, reply) {
     try {
-      const userId = request.user.userId
-      const { name, avatarUrl } = request.body
+      const userId = request.user.userId;
+      
+      // Validate input
+      const validation = updateProfileSchema.safeParse(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { name, avatarUrl } = validation.data;
 
       const user = await authService.updateProfile(userId, { name, avatarUrl })
 
@@ -199,6 +238,81 @@ export const authController = {
         isLoggedIn: !!(accessToken || refreshToken),
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
+      });
+    } catch (error) {
+      return reply.status(400).send({ error: error.message });
+    }
+  },
+
+  // =========================
+  // VERIFY EMAIL - Verifikasi email dengan token
+  // =========================
+  async verifyEmail(request, reply) {
+    try {
+      // Validate input
+      const validation = verifyEmailSchema.safeParse(request.query);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { token } = validation.data;
+
+      // Capture request metadata
+      const reqMeta = {
+        ip: request.ip || request.headers['x-forwarded-for'] || request.socket.remoteAddress,
+        deviceInfo: request.headers['user-agent'] || 'unknown'
+      };
+
+      const result = await authService.verifyEmail(token, reqMeta);
+
+      // If client expects JSON, return JSON. Otherwise redirect to frontend login.
+      const accept = request.headers.accept || '';
+      const frontendBase = process.env.FRONTEND_URL;
+
+      if (accept.includes('application/json')) {
+        return reply.send({
+          message: result.message,
+          email: result.email,
+        });
+      }
+
+      // Redirect user to frontend login with query params indicating success
+      const redirectUrl = `${frontendBase.replace(/\/$/, '')}/auth/login?verified=1&email=${encodeURIComponent(result.email || '')}`;
+      return reply.redirect(redirectUrl);
+    } catch (error) {
+      return reply.status(400).send({ error: error.message });
+    }
+  },
+
+  // =========================
+  // RESEND VERIFICATION - Kirim ulang email verifikasi
+  // =========================
+  async resendVerification(request, reply) {
+    try {
+      // Validate input
+      const validation = resendVerificationSchema.safeParse(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { email } = validation.data;
+
+      const result = await authService.resendVerification(email);
+
+      return reply.send({
+        message: result.message,
       });
     } catch (error) {
       return reply.status(400).send({ error: error.message });

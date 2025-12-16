@@ -138,16 +138,59 @@ class AuthService {
   }
 
   /**
+   * Verify email with token from email link
+   * @param {string} token - Verification token from URL
+   */
+  async verifyEmail(token) {
+    try {
+      const response = await apiClient.get(
+        `${config.auth.endpoints.verifyEmail}?token=${token}`
+      );
+      return {
+        success: true,
+        message: response.data.message,
+        email: response.data.email,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Resend verification email
+   * @param {string} email - User's email address
+   */
+  async resendVerification(email) {
+    try {
+      const response = await apiClient.post(config.auth.endpoints.resendVerification, {
+        email,
+      });
+      return {
+        success: true,
+        message: response.data.message,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Error handler - extracts meaningful error messages
    */
   handleError(error) {
     if (error.response) {
       // Server responded with error status
-      const message = error.response.data?.error || 
-                     error.response.data?.message || 
+      const errorData = error.response.data;
+      const message = errorData?.error || 
+                     errorData?.message || 
                      'An error occurred';
       
-      return new Error(message);
+      // Create error with additional metadata
+      const err = new Error(message);
+      err.code = errorData?.code;
+      err.statusCode = error.response.status;
+      
+      return err;
     } else if (error.request) {
       // Request made but no response received
       return new Error('Network error - please check your connection');

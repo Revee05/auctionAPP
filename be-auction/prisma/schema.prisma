@@ -29,16 +29,23 @@ model Role {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  name          String
-  email         String         @unique
-  avatarUrl     String?
-  password      String?
-  status        UserStatus     @default(ACTIVE)
-  roles         UserRole[]
-  refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                      Int            @id @default(autoincrement())
+  name                    String
+  email                   String         @unique
+  password                String?
+  emailVerified           Boolean        @default(false)
+  verificationToken       String?        @unique
+  verificationTokenHash   String?        @unique
+  verificationTokenExpiry DateTime?
+  registrationIp          String?
+  verificationIp          String?
+  roles                   UserRole[]
+  refreshTokens           RefreshToken[]
+  status                  UserStatus     @default(ACTIVE)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  
+  @@index([verificationTokenHash])
 }
 
 model RefreshToken {
