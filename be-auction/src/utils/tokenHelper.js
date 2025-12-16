@@ -26,8 +26,32 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+/* ============================================
+ * SECURITY: Validate critical environment variables
+ * Fail fast if secrets are not properly configured
+ * ============================================ */
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error(
+    'FATAL SECURITY ERROR: JWT_SECRET must be set in environment variables.\n' +
+    'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+  );
+}
+if (JWT_SECRET.length < 32) {
+  throw new Error('FATAL SECURITY ERROR: JWT_SECRET must be at least 32 characters long');
+}
+
+const REFRESH_TOKEN_HASH_SECRET = process.env.REFRESH_TOKEN_HASH_SECRET;
+if (!REFRESH_TOKEN_HASH_SECRET) {
+  throw new Error(
+    'FATAL SECURITY ERROR: REFRESH_TOKEN_HASH_SECRET must be set in environment variables.\n' +
+    'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+  );
+}
+if (REFRESH_TOKEN_HASH_SECRET.length < 32) {
+  throw new Error('FATAL SECURITY ERROR: REFRESH_TOKEN_HASH_SECRET must be at least 32 characters long');
+}
+
 const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || "15m";
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 
@@ -37,8 +61,6 @@ const COOKIE_SECURE = process.env.NODE_ENV === "production";
 const COOKIE_SAME_SITE = process.env.COOKIE_SAME_SITE || "strict";
 const COOKIE_PATH = process.env.COOKIE_PATH || "/";
 
-/* Refresh token hashing config */
-const REFRESH_TOKEN_HASH_SECRET = process.env.REFRESH_TOKEN_HASH_SECRET || "your-refresh-token-hash-secret-change-in-production-use-strong-random-value";
 const REFRESH_TOKEN_BYTES = parseInt(process.env.REFRESH_TOKEN_BYTES || "64", 10);
 
 /**

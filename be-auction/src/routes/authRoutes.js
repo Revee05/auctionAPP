@@ -12,6 +12,19 @@ export async function authRoutes(fastify, options) {
     }
   }
 
+  const loginRateLimit = {
+    config: {
+      rateLimit: {
+        max: 5, // 5 login attempts
+        timeWindow: '15 minutes',
+        errorResponseBuilder: (request, context) => ({
+          error: 'Too many login attempts. Please try again later.',
+          retryAfter: context.after
+        })
+      }
+    }
+  }
+
   const resendRateLimit = {
     config: {
       rateLimit: {
@@ -32,7 +45,7 @@ export async function authRoutes(fastify, options) {
 
   // Public routes with rate limiting
   fastify.post('/register', registerRateLimit, authController.register)
-  fastify.post('/login', authController.login)
+  fastify.post('/login', loginRateLimit, authController.login)
   
   // Email verification routes (public) with rate limiting
   fastify.get('/verify-email', verifyRateLimit, authController.verifyEmail)

@@ -1,5 +1,6 @@
 import { authService } from "../services/authService.js";
 import tokenHelper from "../utils/tokenHelper.js";
+import { registerSchema, loginSchema, resendVerificationSchema, verifyEmailSchema, updateProfileSchema } from "../validators/authValidators.js";
 
 // ============================================
 // AUTH CONTROLLER - Cookie-based Authentication
@@ -11,13 +12,19 @@ export const authController = {
   // =========================
   async register(request, reply) {
     try {
-      const { name, email, password, roleName } = request.body;
-
-      if (!name || !email || !password) {
+      // Validate input
+      const validation = registerSchema.safeParse(request.body);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Name, email, and password are required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
+
+      const { name, email, password, roleName } = validation.data;
 
       // Capture request metadata
       const reqMeta = {
@@ -40,13 +47,19 @@ export const authController = {
   // =========================
   async login(request, reply) {
     try {
-      const { email, password } = request.body;
-
-      if (!email || !password) {
+      // Validate input
+      const validation = loginSchema.safeParse(request.body);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Email and password are required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
+
+      const { email, password } = validation.data;
 
       // Capture request metadata for security
       const reqMeta = {
@@ -189,8 +202,21 @@ export const authController = {
   // =========================
   async updateProfile(request, reply) {
     try {
-      const userId = request.user.userId
-      const { name, avatarUrl } = request.body
+      const userId = request.user.userId;
+      
+      // Validate input
+      const validation = updateProfileSchema.safeParse(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { name, avatarUrl } = validation.data;
 
       const user = await authService.updateProfile(userId, { name, avatarUrl })
 
@@ -223,13 +249,19 @@ export const authController = {
   // =========================
   async verifyEmail(request, reply) {
     try {
-      const { token } = request.query;
-
-      if (!token) {
+      // Validate input
+      const validation = verifyEmailSchema.safeParse(request.query);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Verification token is required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
+
+      const { token } = validation.data;
 
       // Capture request metadata
       const reqMeta = {
@@ -263,13 +295,19 @@ export const authController = {
   // =========================
   async resendVerification(request, reply) {
     try {
-      const { email } = request.body;
-
-      if (!email) {
+      // Validate input
+      const validation = resendVerificationSchema.safeParse(request.body);
+      if (!validation.success) {
         return reply.status(400).send({
-          error: "Email is required",
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
         });
       }
+
+      const { email } = validation.data;
 
       const result = await authService.resendVerification(email);
 
