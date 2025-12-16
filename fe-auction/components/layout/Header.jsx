@@ -29,10 +29,10 @@ function Header() {
   return (
     <header className={`flex items-center justify-between px-4 py-3 w-full relative sticky top-0 z-50 shadow-2xl backdrop-blur-sm backdrop-saturate-150 ${isDark ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-900/95 text-white border-b border-zinc-800' : 'bg-white/80 text-zinc-900 border-b border-zinc-200'}`}>
       {/* Kiri: Logo */}
-      <div className="flex items-center gap-2">
+      <Link href="/" className="flex items-center gap-2">
         <div className="rounded-lg bg-purple-400 w-8 h-8" />
         <span className="font-bold text-lg">ArtAuction</span>
-      </div>
+      </Link>
       {/* Tengah: Navigasi (hidden on mobile, selalu di tengah) */}
       <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
         <Link href="/" className="flex items-center gap-2 hover:underline">
