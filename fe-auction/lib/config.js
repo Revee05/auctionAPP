@@ -17,6 +17,8 @@ export const config = {
       refresh: '/api/auth/refresh',
       me: '/api/auth/me',
       status: '/api/auth/status',
+      verifyEmail: '/api/auth/verify-email',
+      resendVerification: '/api/auth/resend-verification',
     },
     // Retry config for refresh token
     maxRefreshRetries: 1,

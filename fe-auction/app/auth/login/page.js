@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showResendLink, setShowResendLink] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login, isAuthenticated, user } = useAuth();
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setShowResendLink(false);
     setLoading(true);
 
     try {
@@ -49,7 +51,13 @@ export default function LoginPage() {
         setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError(err.message || "An unexpected error occurred");
+      const errorMessage = err.message || "An unexpected error occurred";
+      setError(errorMessage);
+      
+      // Check if it's email not verified error
+      if (err.code === "EMAIL_NOT_VERIFIED") {
+        setShowResendLink(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -64,6 +72,16 @@ export default function LoginPage() {
         {error && (
           <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-2 rounded mb-4">
             {error}
+            {showResendLink && (
+              <p className="mt-2 text-sm">
+                <Link
+                  href={`/auth/resend-verification?email=${encodeURIComponent(email)}`}
+                  className="text-purple-400 hover:underline font-semibold"
+                >
+                  Resend verification email
+                </Link>
+              </p>
+            )}
           </div>
         )}
 

@@ -46,6 +46,38 @@ export async function cleanupExpiredTokens(daysOld = 30) {
 }
 
 /**
+ * Clean up expired email verification tokens
+ */
+export async function cleanupExpiredVerificationTokens() {
+  const now = new Date();
+
+  try {
+    // Clear expired verification tokens (both plain and hashed)
+    const result = await prisma.user.updateMany({
+      where: {
+        emailVerified: false,
+        verificationTokenExpiry: { lt: now },
+        OR: [
+          { verificationToken: { not: null } },
+          { verificationTokenHash: { not: null } }
+        ]
+      },
+      data: {
+        verificationToken: null,
+        verificationTokenHash: null,
+        verificationTokenExpiry: null
+      }
+    });
+
+    console.log(`[CLEANUP] Cleared ${result.count} expired verification tokens`);
+    return result.count;
+  } catch (error) {
+    console.error('[CLEANUP] Error cleaning up verification tokens:', error);
+    throw error;
+  }
+}
+
+/**
  * Get statistics about refresh tokens
  */
 export async function getTokenStats() {
@@ -84,6 +116,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .then(stats => {
       console.log('[CLEANUP] Current stats:', stats);
       return cleanupExpiredTokens();
+    })
+    .then(() => {
+      console.log('[CLEANUP] Cleaning up verification tokens...');
+      return cleanupExpiredVerificationTokens();
     })
     .then(() => {
       console.log('[CLEANUP] Cleanup complete');

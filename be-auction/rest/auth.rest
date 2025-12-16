@@ -16,11 +16,10 @@
 @collectorPass = Password123!
 
 # User baru untuk uji register/login cepat
-@newName = Super Admin 1
-@newEmail = superadmin1@example.com
-@newPass = password123
-@newRole = SUPER_ADMIN
-
+@newName = Rifky
+@newEmail = alfarezt05@gmail.com
+@newPass = Test123
+@newRole = COLLECTOR
 ### Register cepat (ubah variabel di atas jika perlu)
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
@@ -91,6 +90,26 @@ POST {{baseUrl}}/api/auth/logout
 
 ### Logout dari semua device (butuh access_token aktif)
 POST {{baseUrl}}/api/auth/logout-all
+
+### ==============================================
+### EMAIL VERIFICATION
+### ==============================================
+
+### Verify Email (gunakan token dari email)
+@verificationToken = paste-token-from-email-here
+GET {{baseUrl}}/api/auth/verify-email?token={{verificationToken}}
+
+### Resend Verification Email
+POST {{baseUrl}}/api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "{{newEmail}}"
+}
+
+### ==============================================
+### ADVANCED
+### ==============================================
 
 ### Fallback: Me dengan Bearer (jika perlu manual)
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI4LCJlbWFpbCI6InN1cGVyYWRtaW5AYXVjdGlvbmFwcC5jb20iLCJyb2xlcyI6WyJTVVBFUl9BRE1JTiJdLCJpYXQiOjE3NjUxNjA4NjQsImV4cCI6MTc2NTE2MTc2NH0.6fckPS9GUVicUNgK3DZDVaCeXOBPNFzaqAxNcLAEym4

@@ -2,12 +2,13 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { prisma } from '../../lib/prisma.js'
 import tokenHelper from '../utils/tokenHelper.js'
+import { sendVerificationEmail } from './emailService.js'
 
 export const authService = {
   // ============================================
   // REGISTER - Daftar user baru
   // ============================================
-  async register(data) {
+  async register(data, reqMeta = {}) {
     const { name, email, password, roleName } = data
     
     // Check if user exists
@@ -19,12 +20,24 @@ export const authService = {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    // Generate verification token (64 bytes = 128 hex characters)
+    const verificationToken = crypto.randomBytes(64).toString('hex')
+    // Hash the token for storage (similar to refresh token pattern)
+    const verificationTokenHash = tokenHelper.hashRefreshToken(verificationToken)
+    // Token expires in 24 hours
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
     // Create user
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        emailVerified: false,
+        verificationToken, // Store plain token for backward compatibility (can be removed later)
+        verificationTokenHash, // Store hashed token
+        verificationTokenExpiry,
+        registrationIp: reqMeta.ip || null
       }
     })
 
@@ -38,6 +51,19 @@ export const authService = {
           roleId: role.id
         }
       })
+    }
+
+    // Send verification email (non-blocking, catch errors)
+    try {
+      await sendVerificationEmail({
+        email: user.email,
+        userName: user.name,
+        verificationToken
+      })
+      console.log(`✅ Verification email sent to: ${user.email}`)
+    } catch (error) {
+      console.error(`❌ Failed to send verification email to ${user.email}:`, error.message)
+      // Don't throw error - user is created, they can resend verification later
     }
 
     return user
@@ -67,6 +93,11 @@ export const authService = {
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
       throw new Error('Invalid email or password')
+    }
+
+    // Check email verification - BLOCK unverified users
+    if (!user.emailVerified) {
+      throw new Error('EMAIL_NOT_VERIFIED')
     }
 
     // Extract role names
@@ -284,6 +315,115 @@ export const authService = {
       name: user.name,
       email: user.email,
       roles: user.roles.map(ur => ur.role.name),
+    }
+  },
+
+  // ============================================
+  // VERIFY EMAIL - Verifikasi email dengan token
+  // ============================================
+  async verifyEmail(token, reqMeta = {}) {
+    if (!token) {
+      throw new Error('Verification token is required')
+    }
+
+    // Hash the incoming token to compare with database
+    const tokenHash = tokenHelper.hashRefreshToken(token)
+
+    // Find user with valid token (check both hashed and plain for migration compatibility)
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          {
+            verificationTokenHash: tokenHash,
+            verificationTokenExpiry: { gt: new Date() },
+            emailVerified: false
+          },
+          {
+            verificationToken: token,
+            verificationTokenExpiry: { gt: new Date() },
+            emailVerified: false
+          }
+        ]
+      }
+    })
+
+    if (!user) {
+      throw new Error('Invalid or expired verification token')
+    }
+
+    // Update user - mark as verified and clear token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationTokenHash: null,
+        verificationTokenExpiry: null,
+        verificationIp: reqMeta.ip || null
+      }
+    })
+
+    console.log(`✅ Email verified for ${user.email} from IP: ${reqMeta.ip || 'unknown'}`)
+
+    return {
+      message: 'Email verified successfully',
+      email: user.email
+    }
+  },
+
+  // ============================================
+  // RESEND VERIFICATION - Kirim ulang email verifikasi
+  // ============================================
+  async resendVerification(email) {
+    if (!email) {
+      throw new Error('Email is required')
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    // Check if already verified
+    if (user.emailVerified) {
+      throw new Error('Email is already verified')
+    }
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(64).toString('hex')
+    const verificationTokenHash = tokenHelper.hashRefreshToken(verificationToken)
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+    // Update user with new token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken,
+        verificationTokenHash,
+        verificationTokenExpiry
+      }
+    })
+
+    // Send verification email
+    try {
+      await sendVerificationEmail({
+        email: user.email,
+        userName: user.name,
+        verificationToken
+      })
+      console.log(`✅ Verification email resent to: ${user.email}`)
+    } catch (error) {
+      console.error(`❌ Failed to resend verification email to ${user.email}:`, error.message)
+      throw new Error('Failed to send verification email. Please try again later.')
+    }
+
+    return {
+      message: 'Verification email sent successfully',
+      email: user.email
     }
   }
 }

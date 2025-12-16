@@ -41,17 +41,17 @@ export default function RegisterPage() {
       });
 
       if (result.success) {
-        setSuccess(result.message || "Registration successful! Redirecting to login...");
-        
+        // capture email before clearing
+        const userEmail = email;
+
         // Clear form
         setName("");
         setEmail("");
         setPassword("");
-        
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          router.push("/auth/login");
-        }, 2000);
+
+        // Redirect user to verify-email page with their email prefilled
+        router.push(`/auth/verify-email?email=${encodeURIComponent(userEmail)}`);
+        return;
       }
     } catch (err) {
       setError(err.message || "Registration failed");
@@ -73,8 +73,21 @@ export default function RegisterPage() {
         )}
 
         {success && (
-          <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-2 rounded mb-4">
-            {success}
+          <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-3 rounded mb-4">
+            <p className="font-semibold">{success}</p>
+            <p className="text-sm mt-2 text-green-300">
+              Check your inbox and click the verification link before logging in.
+            </p>
+            <div className="mt-3">
+              <Link href="/auth/login">
+                <Button
+                  variant="outline"
+                  className="w-full border-green-700 text-green-400 hover:bg-green-900/30"
+                >
+                  Go to Login
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
 

@@ -37,7 +37,7 @@ export const sendVerificationEmail = async ({ email, userName, verificationToken
     const transporter = createTransporter();
 
     // Build verification link
-    const verificationLink = `${process.env.VERIFICATION_URL_BASE}/auth/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.VERIFICATION_URL_BASE}/api/auth/verify-email?token=${verificationToken}`;
 
     // Prepare email content
     const mailOptions = {
