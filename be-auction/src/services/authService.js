@@ -426,4 +426,33 @@ export const authService = {
       email: user.email
     }
   }
+  ,
+
+  // ============================================
+  // UPDATE PROFILE - Update current user's profile
+  // ============================================
+  async updateProfile(userId, data) {
+    const { name, avatarUrl } = data || {}
+
+    const updateData = {}
+    if (name !== undefined) updateData.name = name
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      include: {
+        roles: {
+          include: { role: true }
+        }
+      }
+    })
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles.map(ur => ur.role.name)
+    }
+  }
 }

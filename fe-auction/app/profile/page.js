@@ -37,7 +37,7 @@ function ProfileContent() {
 
     try {
       // Call your update profile endpoint (adjust to your actual API)
-      await apiClient.put("/api/users/profile", {
+      await apiClient.put("/api/auth/profile", {
         name: form.name,
         avatarUrl: form.avatarUrl,
       });
@@ -48,7 +48,7 @@ function ProfileContent() {
       setSuccess("Profile updated successfully!");
       setEditing(false);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to update profile");
+      setError(err?.response?.data?.error || err?.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }

@@ -1,69 +1,85 @@
 /**
- * Example: Protected Dashboard Page
- * Demonstrates role-based access control
+ * Admin Dashboard - Protected Page
+ * Features: Sidebar navigation, role-based access, SPA-like experience
  */
 
 "use client";
 
-import { useAuth, useRole } from "@/hooks/useAuth";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import useTheme from "@/hooks/useTheme";
+import { SunMoon, LogOut as LogOutIcon } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Sidebar from "./components/Sidebar";
+import DashboardStats from "./Tab/DashboardStats";
+import UserManagement from "./Tab/UserManagement";
+import { LogOut } from "lucide-react";
 
-export default function DashboardPage() {
+export default function AdminPage() {
   return (
     <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN"]}>
-      <DashboardContent />
+      <AdminDashboard />
     </ProtectedRoute>
   );
 }
 
-function DashboardContent() {
+function AdminDashboard() {
   const { user, logout } = useAuth();
-  const { hasRole } = useRole("SUPER_ADMIN");
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <DashboardStats />;
+      case "users":
+        return <UserManagement />;
+      default:
+        return <DashboardStats />;
+    }
+  };
+
+  const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-zinc-400 mt-2">
-              Welcome back, {user?.name}
-            </p>
-          </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg"
-          >
-            Logout
-          </button>
-        </div>
+    <div className={`min-h-screen bg-white text-zinc-900 dark:bg-black dark:text-white`}>
+      {/* Sidebar */}
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Super Admin Only Section */}
-        {hasRole && (
-          <div className="bg-purple-900/20 border border-purple-500 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-2">Super Admin Tools</h2>
-            <p className="text-zinc-400">
-              This section is only visible to super admins.
-            </p>
-          </div>
-        )}
+      {/* Main Content */}
+      <div className="lg:ml-64">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-4">
+              {/* Mobile menu spacing */}
+              <div className="lg:hidden w-10"></div>
+              <div>
+                <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                  {activeTab === "dashboard" ? "Dashboard" : "User Management"}
+                </h1>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
+                  Logged in as {user?.email}
+                </p>
+              </div>
+            </div>
 
-        {/* Regular Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard title="Total Users" value="1,234" />
-          <StatCard title="Active Auctions" value="45" />
-          <StatCard title="Revenue" value="$12,345" />
-        </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white text-sm font-medium"
+              >
+                <LogOutIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">{renderContent()}</div>
+        </main>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ title, value }) {
-  return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-      <h3 className="text-zinc-400 text-sm mb-2">{title}</h3>
-      <p className="text-3xl font-bold">{value}</p>
     </div>
   );
 }
