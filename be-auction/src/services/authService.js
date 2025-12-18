@@ -19,7 +19,6 @@ export const authService = {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
-
     // Generate verification token (64 bytes = 128 hex characters)
     const verificationToken = crypto.randomBytes(64).toString('hex')
     // Hash the token for storage (similar to refresh token pattern)
