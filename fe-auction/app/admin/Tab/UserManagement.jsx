@@ -160,24 +160,49 @@ export default function UserManagement() {
   };
 
   const handleAssignRole = async (userId, roleName) => {
+    setIsLoading(true)
     try {
-      const response = await apiClient.post(
-        `/api/superadmin/users/${userId}/roles`,
-        { roleName }
-      );
+      // Find current user's roles from the cached page
+      const u = currentUsers.find(x => x.id === userId)
+      const existingRoles = Array.isArray(u?.roles) ? u.roles : []
 
-      if (response.status === 200) {
-        // Refresh current page after successful assignment
-        const cur = pages[currentPageIndex]?.cursor || null
-        await fetchPage(cur, false)
+      // Remove any other roles (so the user effectively has a single role)
+      for (const r of existingRoles) {
+        if (r === roleName) continue
+        try {
+          await apiClient.delete(`/api/superadmin/users/${userId}/roles`, { data: { roleName: r } })
+        } catch (e) {
+          // Log and continue removing other roles
+          console.warn('Failed to remove role', r, e?.response?.data || e.message)
+        }
       }
+
+      // Assign the desired role if not already present
+      if (!existingRoles.includes(roleName)) {
+        await apiClient.post(`/api/superadmin/users/${userId}/roles`, { roleName })
+      }
+
+      // Clear selected role after successful assignment
+      setSelectedRoles(prev => {
+        const updated = { ...prev };
+        delete updated[userId];
+        return updated;
+      });
+
+      // Refresh current page after successful assignment/removal
+      const cur = pages[currentPageIndex]?.cursor || null
+      await fetchPage(cur, false)
     } catch (err) {
       console.error("Failed to assign role:", err);
       alert(err.response?.data?.error || "Failed to assign role");
+    } finally {
+      setIsLoading(false)
     }
   };
 
   const [editingUser, setEditingUser] = useState(null);
+  // Store selected roles temporarily before assignment
+  const [selectedRoles, setSelectedRoles] = useState({});
 
   // Open modal to edit user
   const handleEdit = (userId) => {
@@ -450,15 +475,12 @@ export default function UserManagement() {
                         {isSuperAdmin && (
                           <div className="ml-3 flex items-center gap-2">
                             <select
-                              value={user.role}
+                              value={selectedRoles[user.id] || user.role}
                               onChange={(e) => {
-                                const newRole = e.target.value;
-                                // Optimistic update
-                                setUsers((prev) =>
-                                  prev.map((u) =>
-                                    u.id === user.id ? { ...u, role: newRole } : u
-                                  )
-                                );
+                                setSelectedRoles(prev => ({
+                                  ...prev,
+                                  [user.id]: e.target.value
+                                }));
                               }}
                               className="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm p-1 rounded-md border border-zinc-200 dark:border-zinc-700"
                             >
@@ -469,9 +491,12 @@ export default function UserManagement() {
                             </select>
                             <Button
                               size="sm"
-                              onClick={() => handleAssignRole(user.id, user.role)}
+                              onClick={() => {
+                                const roleToAssign = selectedRoles[user.id] || user.role;
+                                handleAssignRole(user.id, roleToAssign);
+                              }}
                               className="bg-blue-600 hover:bg-blue-700 text-white"
-                              disabled={isLoading}
+                              disabled={isLoading || (!selectedRoles[user.id] || selectedRoles[user.id] === user.role)}
                             >
                               Assign
                             </Button>
