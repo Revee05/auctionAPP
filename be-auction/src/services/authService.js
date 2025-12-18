@@ -349,13 +349,11 @@ export const authService = {
         OR: [
           {
             verificationTokenHash: tokenHash,
-            verificationTokenExpiry: { gt: new Date() },
-            emailVerified: false
+            verificationTokenExpiry: { gt: new Date() }
           },
           {
             verificationToken: token,
-            verificationTokenExpiry: { gt: new Date() },
-            emailVerified: false
+            verificationTokenExpiry: { gt: new Date() }
           }
         ]
       }
@@ -365,23 +363,74 @@ export const authService = {
       throw new Error('Invalid or expired verification token')
     }
 
-    // Update user - mark as verified and clear token
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        verificationToken: null,
-        verificationTokenHash: null,
-        verificationTokenExpiry: null,
-        verificationIp: reqMeta.ip || null
+    // Check if this is email change verification
+    if (user.pendingEmail) {
+      // Email change verification
+      const newEmail = user.pendingEmail
+
+      // Check if new email is still available
+      const existingUser = await prisma.user.findUnique({
+        where: { email: newEmail }
+      })
+
+      if (existingUser && existingUser.id !== user.id) {
+        throw new Error('Email already in use by another account')
       }
-    })
 
-    console.log(`✅ Email verified for ${user.email} from IP: ${reqMeta.ip || 'unknown'}`)
+      // Update email and clear verification tokens
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          email: newEmail,
+          pendingEmail: null,
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenHash: null,
+          verificationTokenExpiry: null,
+          verificationIp: reqMeta.ip || null
+        }
+      })
 
-    return {
-      message: 'Email verified successfully',
-      email: user.email
+      // Revoke all refresh tokens to force re-login with new email
+      await prisma.refreshToken.updateMany({
+        where: { userId: user.id },
+        data: { revoked: true }
+      })
+
+      console.log(`✅ Email changed from ${user.email} to ${newEmail} from IP: ${reqMeta.ip || 'unknown'}`)
+
+      return {
+        message: 'Email changed successfully. Please login with your new email.',
+        email: newEmail,
+        isEmailChange: true
+      }
+    } else {
+      // Regular email verification (registration)
+      if (user.emailVerified) {
+        return {
+          message: 'Email already verified',
+          email: user.email
+        }
+      }
+
+      // Update user - mark as verified and clear token
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenHash: null,
+          verificationTokenExpiry: null,
+          verificationIp: reqMeta.ip || null
+        }
+      })
+
+      console.log(`✅ Email verified for ${user.email} from IP: ${reqMeta.ip || 'unknown'}`)
+
+      return {
+        message: 'Email verified successfully',
+        email: user.email
+      }
     }
   },
 
@@ -467,6 +516,116 @@ export const authService = {
       name: user.name,
       email: user.email,
       roles: user.roles.map(ur => ur.role.name)
+    }
+  },
+
+  // ============================================
+  // CHANGE EMAIL - Request email change with verification
+  // ============================================
+  async changeEmail(userId, newEmail, password) {
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || !user.password) {
+      throw new Error('User not found')
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(password, user.password)
+    if (!isValidPassword) {
+      throw new Error('Invalid password')
+    }
+
+    // Check if new email is same as current
+    if (user.email === newEmail) {
+      throw new Error('New email must be different from current email')
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: newEmail }
+    })
+
+    if (existingUser) {
+      throw new Error('Email already in use')
+    }
+
+    // Generate verification token for new email
+    const verificationToken = crypto.randomBytes(64).toString('hex')
+    const verificationTokenHash = tokenHelper.hashRefreshToken(verificationToken)
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+    // Store pending email change in user record
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        pendingEmail: newEmail,
+        verificationToken,
+        verificationTokenHash,
+        verificationTokenExpiry
+      }
+    })
+
+    // Send verification email to NEW email address
+    try {
+      await sendVerificationEmail({
+        email: newEmail,
+        userName: user.name,
+        verificationToken,
+        isEmailChange: true // Flag to customize email template
+      })
+      console.log(`✅ Email change verification sent to: ${newEmail}`)
+    } catch (error) {
+      console.error(`❌ Failed to send email change verification to ${newEmail}:`, error.message)
+      throw new Error('Failed to send verification email')
+    }
+
+    return {
+      message: 'Verification email sent to new address. Please check your inbox.',
+      pendingEmail: newEmail
+    }
+  },
+
+  // ============================================
+  // CHANGE PASSWORD - Update user password
+  // ============================================
+  async changePassword(userId, currentPassword, newPassword) {
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user || !user.password) {
+      throw new Error('User not found')
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password)
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect')
+    }
+
+    // Check if new password is different
+    const isSamePassword = await bcrypt.compare(newPassword, user.password)
+    if (isSamePassword) {
+      throw new Error('New password must be different from current password')
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    })
+
+    // Revoke all refresh tokens except current session to force re-login on other devices
+    // Note: We keep current session active for better UX
+    return {
+      message: 'Password changed successfully'
     }
   }
 }

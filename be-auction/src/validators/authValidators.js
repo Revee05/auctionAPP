@@ -94,6 +94,25 @@ export const updateProfileSchema = z.object({
 });
 
 /* ============================================
+ * CHANGE EMAIL Schema (requires verification)
+ * ============================================ */
+export const changeEmailSchema = z.object({
+  newEmail: emailSchema,
+  password: z.string().min(1, 'Password is required for email change')
+});
+
+/* ============================================
+ * CHANGE PASSWORD Schema
+ * ============================================ */
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema
+}).refine(data => data.currentPassword !== data.newPassword, {
+  message: 'New password must be different from current password',
+  path: ['newPassword']
+});
+
+/* ============================================
  * ASSIGN ROLE Schema (Super Admin)
  * ============================================ */
 export const assignRoleSchema = z.object({
@@ -163,6 +182,8 @@ export default {
   resendVerificationSchema,
   verifyEmailSchema,
   updateProfileSchema,
+  changeEmailSchema,
+  changePasswordSchema,
   assignRoleSchema,
   updateUserSchema,
   paginationSchema,

@@ -7,9 +7,22 @@
  * Generate verification email HTML
  * @param {string} userName - User's name
  * @param {string} verificationLink - Full verification URL
+ * @param {boolean} isEmailChange - Whether this is for email change
  * @returns {string} HTML email content
  */
-export const getVerificationEmailHTML = (userName, verificationLink) => {
+export const getVerificationEmailHTML = (userName, verificationLink, isEmailChange = false) => {
+  const title = isEmailChange ? 'Email Change Verification' : 'Email Verification';
+  const greeting = isEmailChange 
+    ? `Hi ${userName}! 👋` 
+    : `Welcome, ${userName}! 👋`;
+  const mainText = isEmailChange
+    ? 'You recently requested to change your email address on Auction App.'
+    : 'Thank you for registering with Auction App. We\'re excited to have you on board!';
+  const actionText = isEmailChange
+    ? 'To confirm your new email address and complete the change, please click the button below:'
+    : 'To complete your registration and start exploring our platform, please verify your email address by clicking the button below:';
+  const buttonText = isEmailChange ? 'Verify New Email' : 'Verify Email Address';
+  
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -28,7 +41,7 @@ export const getVerificationEmailHTML = (userName, verificationLink) => {
             max-width: 600px;
             margin: 40px auto;
             background-color: #ffffff;
-            border-radius: 8px;
+            border-radius: 1px solid #303030ff;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
@@ -122,14 +135,14 @@ export const getVerificationEmailHTML = (userName, verificationLink) => {
         </div>
         
         <div class="content">
-            <h2>Welcome, ${userName}! 👋</h2>
+            <h2>${greeting}</h2>
             
-            <p>Thank you for registering with Auction App. We're excited to have you on board!</p>
+            <p>${mainText}</p>
             
-            <p>To complete your registration and start exploring our platform, please verify your email address by clicking the button below:</p>
+            <p>${actionText}</p>
             
             <div class="button-container">
-                <a href="${verificationLink}" class="verify-button">Verify Email Address</a>
+                <a href="${verificationLink}" class="verify-button">${buttonText}</a>
             </div>
             
             <div class="alternative-link">
@@ -161,21 +174,30 @@ export const getVerificationEmailHTML = (userName, verificationLink) => {
  * Generate verification email plain text version
  * @param {string} userName - User's name
  * @param {string} verificationLink - Full verification URL
+ * @param {boolean} isEmailChange - Whether this is for email change
  * @returns {string} Plain text email content
  */
-export const getVerificationEmailText = (userName, verificationLink) => {
+export const getVerificationEmailText = (userName, verificationLink, isEmailChange = false) => {
+  const greeting = isEmailChange ? `Hi ${userName}!` : `Welcome to Auction App, ${userName}!`;
+  const mainText = isEmailChange
+    ? 'You recently requested to change your email address on Auction App.'
+    : 'Thank you for registering with us. We\'re excited to have you on board!';
+  const actionText = isEmailChange
+    ? 'To confirm your new email address and complete the change, please visit the link below:'
+    : 'To complete your registration and start exploring our platform, please verify your email address by visiting the link below:';
+    
   return `
-Welcome to Auction App, ${userName}!
+${greeting}
 
-Thank you for registering with us. We're excited to have you on board!
+${mainText}
 
-To complete your registration and start exploring our platform, please verify your email address by visiting the link below:
+${actionText}
 
 ${verificationLink}
 
 This link will expire in 24 hours. If you don't verify your email within this time, you'll need to request a new verification link.
 
-If you didn't create an account with us, please ignore this email.
+If you didn't ${isEmailChange ? 'request this change' : 'create an account with us'}, please ignore this email.
 
 ---
 Auction App

@@ -1,6 +1,6 @@
 import { authService } from "../services/authService.js";
 import tokenHelper from "../utils/tokenHelper.js";
-import { registerSchema, loginSchema, resendVerificationSchema, verifyEmailSchema, updateProfileSchema } from "../validators/authValidators.js";
+import { registerSchema, loginSchema, resendVerificationSchema, verifyEmailSchema, updateProfileSchema, changeEmailSchema, changePasswordSchema } from "../validators/authValidators.js";
 
 // ============================================
 // AUTH CONTROLLER - Cookie-based Authentication
@@ -295,12 +295,18 @@ export const authController = {
         return reply.send({
           message: result.message,
           email: result.email,
+          isEmailChange: result.isEmailChange || false,
         });
       }
 
-      // Redirect user to frontend login with query params indicating success
-      const redirectUrl = `${frontendBase.replace(/\/$/, '')}/auth/login?verified=1&email=${encodeURIComponent(result.email || '')}`;
-      return reply.redirect(redirectUrl);
+      // Different redirect for email change vs registration
+      if (result.isEmailChange) {
+        const redirectUrl = `${frontendBase.replace(/\/$/, '')}/auth/login?emailChanged=1&email=${encodeURIComponent(result.email || '')}`;
+        return reply.redirect(redirectUrl);
+      } else {
+        const redirectUrl = `${frontendBase.replace(/\/$/, '')}/auth/login?verified=1&email=${encodeURIComponent(result.email || '')}`;
+        return reply.redirect(redirectUrl);
+      }
     } catch (error) {
       return reply.status(400).send({ error: error.message });
     }
@@ -330,6 +336,64 @@ export const authController = {
       return reply.send({
         message: result.message,
       });
+    } catch (error) {
+      return reply.status(400).send({ error: error.message });
+    }
+  },
+
+  // =========================
+  // CHANGE EMAIL - Request email change with verification
+  // =========================
+  async changeEmail(request, reply) {
+    try {
+      const userId = request.user.userId;
+
+      // Validate input
+      const validation = changeEmailSchema.safeParse(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { newEmail, password } = validation.data;
+
+      const result = await authService.changeEmail(userId, newEmail, password);
+
+      return reply.send(result);
+    } catch (error) {
+      return reply.status(400).send({ error: error.message });
+    }
+  },
+
+  // =========================
+  // CHANGE PASSWORD - Update user password
+  // =========================
+  async changePassword(request, reply) {
+    try {
+      const userId = request.user.userId;
+
+      // Validate input
+      const validation = changePasswordSchema.safeParse(request.body);
+      if (!validation.success) {
+        return reply.status(400).send({
+          error: "Validation failed",
+          details: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
+      const { currentPassword, newPassword } = validation.data;
+
+      const result = await authService.changePassword(userId, currentPassword, newPassword);
+
+      return reply.send(result);
     } catch (error) {
       return reply.status(400).send({ error: error.message });
     }

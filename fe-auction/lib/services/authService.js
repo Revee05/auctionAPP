@@ -194,6 +194,47 @@ class AuthService {
   }
 
   /**
+   * Change email address (requires verification)
+   * @param {string} newEmail - New email address
+   * @param {string} password - Current password for verification
+   */
+  async changeEmail(newEmail, password) {
+    try {
+      const response = await apiClient.put('/api/auth/change-email', {
+        newEmail,
+        password,
+      });
+      return {
+        success: true,
+        message: response.data.message,
+        pendingEmail: response.data.pendingEmail,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Change password
+   * @param {string} currentPassword - Current password
+   * @param {string} newPassword - New password
+   */
+  async changePassword(currentPassword, newPassword) {
+    try {
+      const response = await apiClient.put('/api/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      return {
+        success: true,
+        message: response.data.message,
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Error handler - extracts meaningful error messages
    */
   handleError(error) {

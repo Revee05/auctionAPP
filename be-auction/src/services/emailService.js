@@ -30,22 +30,28 @@ const createTransporter = () => {
  * @param {string} options.email - Recipient email address
  * @param {string} options.userName - User's name
  * @param {string} options.verificationToken - Verification token
+ * @param {boolean} options.isEmailChange - Whether this is for email change verification
  * @returns {Promise<Object>} Email send result
  */
-export const sendVerificationEmail = async ({ email, userName, verificationToken }) => {
+export const sendVerificationEmail = async ({ email, userName, verificationToken, isEmailChange = false }) => {
   try {
     const transporter = createTransporter();
 
     // Build verification link
     const verificationLink = `${process.env.VERIFICATION_URL_BASE}/api/auth/verify-email?token=${verificationToken}`;
 
+    // Customize subject and content based on email change flag
+    const subject = isEmailChange 
+      ? 'Verify Your New Email Address - Auction App'
+      : 'Verify Your Email Address - Auction App';
+
     // Prepare email content
     const mailOptions = {
       from: `"${process.env.EMAIL_FROM_NAME || 'Auction App'}" <${process.env.EMAIL_FROM}>`,
       to: email,
-      subject: 'Verify Your Email Address - Auction App',
-      text: getVerificationEmailText(userName, verificationLink),
-      html: getVerificationEmailHTML(userName, verificationLink),
+      subject,
+      text: getVerificationEmailText(userName, verificationLink, isEmailChange),
+      html: getVerificationEmailHTML(userName, verificationLink, isEmailChange),
     };
 
     // Send email

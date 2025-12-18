@@ -37,6 +37,7 @@ model User {
   verificationToken       String?        @unique
   verificationTokenHash   String?        @unique
   verificationTokenExpiry DateTime?
+  pendingEmail            String?        // New email waiting for verification
   registrationIp          String?
   verificationIp          String?
   roles                   UserRole[]
