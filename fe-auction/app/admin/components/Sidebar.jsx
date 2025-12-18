@@ -41,22 +41,36 @@ function SidebarContent({ activeTab, onTabClick, collapsed, onCollapse }) {
   ];
 
   return (
-    <div className={`flex flex-col h-full bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl border-r border-zinc-200/50 dark:border-zinc-800/50 transition-all duration-300 ${collapsed ? "w-[72px]" : "w-full"}`}>
+    <div className={`relative flex flex-col h-full bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl border-r border-zinc-200/50 dark:border-zinc-800/50 transition-all duration-300 ${collapsed ? "w-[72px]" : "w-full"}`}>
       {/* Logo / Header */}
-      <div className={`p-6 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center ${collapsed ? "justify-center px-4" : "gap-4"}`}>
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-          <Gavel className="w-5 h-5 text-white" />
+      <div className={`p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center ${collapsed ? "justify-center px-4" : "justify-between gap-4 px-6"}`}>
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+            <Gavel className="w-5 h-5 text-white" />
+          </div>
+          {!collapsed && (
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="overflow-hidden whitespace-nowrap"
+            >
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+                Admin
+              </h2>
+            </motion.div>
+          )}
         </div>
-        {!collapsed && (
-          <motion.div 
-            initial={{ opacity: 0, x: -10 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            className="overflow-hidden whitespace-nowrap"
+
+        {/* Collapse / Expand Toggle moved to header for desktop */}
+        {onCollapse && (
+          <button
+            onClick={() => onCollapse(!collapsed)}
+            className="hidden lg:inline-flex absolute -right-8 top-6 w-9 h-9 p-0 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-xl transition-transform duration-150 transform hover:-translate-x-1 z-[80] ring-2 ring-white dark:ring-zinc-900"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <h2 className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-              Admin
-            </h2>
-          </motion.div>
+            {collapsed ? <ChevronRight className="w-4 h-4 text-white" /> : <ChevronLeft className="w-4 h-4 text-white" />}
+          </button>
         )}
       </div>
 
@@ -113,25 +127,24 @@ function SidebarContent({ activeTab, onTabClick, collapsed, onCollapse }) {
       </nav>
 
       {/* Footer / Toggle */}
-      <div className="p-3 border-t border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-sm flex flex-col gap-2">
+      <div className="p-3 border-t border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-sm">
         {!onCollapse ? (
-            // Mobile Footer
-            <div className={`px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800`}>
-                <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">Auction Admin</p>
-                <div className="flex items-center justify-between mt-1">
-                    <p className="text-[10px] text-zinc-500">v1.0.0</p>
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                </div>
+          // Mobile Footer
+          <div className={`px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800`}>
+            <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">Auction Admin</p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[10px] text-zinc-500">v1.0.0</p>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             </div>
+          </div>
         ) : (
-            // Desktop Footer (Collapse Button)
-            <button
-                onClick={() => onCollapse(!collapsed)}
-                className="flex items-center justify-center p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 dark:text-zinc-400 transition-colors"
-                title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-                {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
+          // Desktop Footer - compact info only (toggle moved to header)
+          <div className="px-3 py-2 rounded-md bg-transparent text-zinc-500 dark:text-zinc-400 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">v1.0.0</span>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -151,7 +164,7 @@ export default function Sidebar({ activeTab, onTabChange, mobileOpen, setMobileO
       <motion.div 
         animate={{ width: collapsed ? 72 : 288 }} 
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="hidden lg:block h-screen fixed left-0 top-0 z-50 overflow-hidden"
+        className="hidden lg:block h-screen fixed left-0 top-0 z-50 overflow-visible"
       >
         <SidebarContent 
             activeTab={activeTab} 
