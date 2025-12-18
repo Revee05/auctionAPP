@@ -208,5 +208,107 @@ export const superAdminUserController = {
     } catch (error) {
       return reply.status(500).send({ error: error.message })
     }
+  },
+
+  // =========================
+  // BAN USER
+  // Akses: Super Admin Only
+  // Super Admin can ban ADMIN, USER, ARTIST, COLLECTOR (but not other SUPER_ADMIN)
+  // =========================
+  async banUser(request, reply) {
+    try {
+      const { id } = request.params
+      
+      // Fetch target user to check roles before allowing ban
+      const targetUser = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          roles: {
+            include: { role: true }
+          }
+        }
+      })
+
+      if (!targetUser) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+
+      const targetRoles = targetUser.roles.map(ur => ur.role.name)
+
+      // Prevent banning self
+      if (request.user?.id === parseInt(id)) {
+        return reply.status(403).send({ error: 'You cannot ban yourself' })
+      }
+
+      // Super Admin restrictions: cannot ban other SUPER_ADMIN
+      if (targetRoles.includes('SUPER_ADMIN')) {
+        return reply.status(403).send({ error: 'Super admins cannot ban other super admins' })
+      }
+
+      // Update user status to BANNED
+      const user = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { status: 'BANNED' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          updatedAt: true
+        }
+      })
+
+      return reply.send({ message: 'User banned successfully', user })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
+  },
+
+  // =========================
+  // UNBAN USER
+  // Akses: Super Admin Only
+  // =========================
+  async unbanUser(request, reply) {
+    try {
+      const { id } = request.params
+      
+      // Fetch target user
+      const targetUser = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          roles: {
+            include: { role: true }
+          }
+        }
+      })
+
+      if (!targetUser) {
+        return reply.status(404).send({ error: 'User not found' })
+      }
+
+      const targetRoles = targetUser.roles.map(ur => ur.role.name)
+
+      // Super Admin restrictions: cannot unban other SUPER_ADMIN (though they shouldn't be banned)
+      if (targetRoles.includes('SUPER_ADMIN')) {
+        return reply.status(403).send({ error: 'Super admins cannot unban other super admins' })
+      }
+
+      // Update user status to ACTIVE
+      const user = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { status: 'ACTIVE' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          updatedAt: true
+        }
+      })
+
+      return reply.send({ message: 'User unbanned successfully', user })
+    } catch (error) {
+      return reply.status(500).send({ error: error.message })
+    }
   }
 }

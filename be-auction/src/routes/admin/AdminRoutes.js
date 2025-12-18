@@ -21,4 +21,10 @@ export async function adminUserRoutes(fastify, options) {
   
   // PUT /api/admin/users/:id - Update user
   fastify.put('/:id', adminUserController.update)
+  
+  // PUT /api/admin/users/:id/ban - Ban user
+  fastify.put('/:id/ban', adminUserController.banUser)
+  
+  // PUT /api/admin/users/:id/unban - Unban user
+  fastify.put('/:id/unban', adminUserController.unbanUser)
 }

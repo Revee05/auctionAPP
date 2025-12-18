@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Edit, Trash2, Shield, Mail, Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Edit, Trash2, Shield, Mail, Loader2, AlertCircle, ChevronLeft, ChevronRight, Ban, UserCheck } from "lucide-react";
 import apiClient from "@/lib/apiClient";
 import EditUserModal from "../components/EditUserModal";
 
@@ -238,6 +238,88 @@ export default function UserManagement() {
     } catch (err) {
       console.error('Failed to delete user:', err)
       alert(err.response?.data?.error || 'Failed to delete user')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Ban user (ADMIN & SUPER_ADMIN)
+  const handleBan = async (userId, userRoles = []) => {
+    // Prevent banning self
+    if (currentUser?.id === userId) {
+      alert('You cannot ban yourself')
+      return
+    }
+
+    // Admin restrictions: cannot ban ADMIN or SUPER_ADMIN
+    if (isAdmin && !isSuperAdmin) {
+      if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) {
+        alert('Admins cannot ban other admins or super admins')
+        return
+      }
+    }
+
+    // Super Admin restrictions: cannot ban other SUPER_ADMIN
+    if (isSuperAdmin && userRoles.includes('SUPER_ADMIN')) {
+      alert('Super admins cannot ban other super admins')
+      return
+    }
+
+    const ok = confirm('Are you sure you want to ban this user?')
+    if (!ok) return
+
+    setIsLoading(true)
+    try {
+      const endpoint = isSuperAdmin ? `/api/superadmin/users/${userId}/ban` : `/api/admin/users/${userId}/ban`
+      const resp = await apiClient.put(endpoint)
+      if (resp.status === 200) {
+        // Refresh current page
+        const cur = pages[currentPageIndex]?.cursor || null
+        await fetchPage(cur, false)
+      } else {
+        alert(resp.data?.error || 'Failed to ban user')
+      }
+    } catch (err) {
+      console.error('Failed to ban user:', err)
+      alert(err.response?.data?.error || 'Failed to ban user')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Unban user (ADMIN & SUPER_ADMIN)
+  const handleUnban = async (userId, userRoles = []) => {
+    // Admin restrictions: cannot unban ADMIN or SUPER_ADMIN
+    if (isAdmin && !isSuperAdmin) {
+      if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) {
+        alert('Admins cannot unban other admins or super admins')
+        return
+      }
+    }
+
+    // Super Admin restrictions: cannot unban other SUPER_ADMIN (though they shouldn't be banned)
+    if (isSuperAdmin && userRoles.includes('SUPER_ADMIN')) {
+      alert('Super admins cannot unban other super admins')
+      return
+    }
+
+    const ok = confirm('Are you sure you want to unban this user?')
+    if (!ok) return
+
+    setIsLoading(true)
+    try {
+      const endpoint = isSuperAdmin ? `/api/superadmin/users/${userId}/unban` : `/api/admin/users/${userId}/unban`
+      const resp = await apiClient.put(endpoint)
+      if (resp.status === 200) {
+        // Refresh current page
+        const cur = pages[currentPageIndex]?.cursor || null
+        await fetchPage(cur, false)
+      } else {
+        alert(resp.data?.error || 'Failed to unban user')
+      }
+    } catch (err) {
+      console.error('Failed to unban user:', err)
+      alert(err.response?.data?.error || 'Failed to unban user')
     } finally {
       setIsLoading(false)
     }
@@ -532,6 +614,41 @@ export default function UserManagement() {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
+                          
+                          {/* Ban/Unban buttons - visible for both ADMIN and SUPER_ADMIN */}
+                          {user.status?.toLowerCase() === 'banned' ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-green-400 hover:text-green-300 hover:bg-green-600/20"
+                              onClick={() => handleUnban(user.id, user.roles)}
+                              disabled={
+                                isLoading ||
+                                currentUser?.id === user.id ||
+                                (!isSuperAdmin && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')))
+                              }
+                              title="Unban user"
+                            >
+                              <UserCheck className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-orange-400 hover:text-orange-300 hover:bg-orange-600/20"
+                              onClick={() => handleBan(user.id, user.roles)}
+                              disabled={
+                                isLoading ||
+                                currentUser?.id === user.id ||
+                                (!isSuperAdmin && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN'))) ||
+                                (isSuperAdmin && user.roles.includes('SUPER_ADMIN'))
+                              }
+                              title="Ban user"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </Button>
+                          )}
+                          
                           {isSuperAdmin && (
                             <Button
                               size="sm"

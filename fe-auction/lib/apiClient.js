@@ -48,6 +48,17 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle 403 ACCOUNT_SUSPENDED - force logout immediately
+    if (error.response?.status === 403 && error.response?.data?.code === 'ACCOUNT_SUSPENDED') {
+      // Trigger logout (handled by auth context)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:suspended', { 
+          detail: { message: error.response.data.error }
+        }));
+      }
+      return Promise.reject(error);
+    }
+
     // Ignore refresh endpoint errors to prevent infinite loops
     if (originalRequest.url?.includes(config.auth.endpoints.refresh)) {
       isRefreshing = false;

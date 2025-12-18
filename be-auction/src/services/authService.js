@@ -99,6 +99,11 @@ export const authService = {
       throw new Error('EMAIL_NOT_VERIFIED')
     }
 
+    // Check user status - BLOCK suspended or banned users
+    if (user.status === 'SUSPENDED' || user.status === 'BANNED') {
+      throw new Error('ACCOUNT_SUSPENDED')
+    }
+
     // Extract role names
     const roles = user.roles.map(ur => ur.role.name)
 
@@ -189,6 +194,16 @@ export const authService = {
 
       if (!storedToken) {
         throw new Error('Invalid or expired refresh token')
+      }
+
+      // Check user status - BLOCK suspended or banned users (force logout)
+      if (storedToken.user.status === 'SUSPENDED' || storedToken.user.status === 'BANNED') {
+        // Revoke all tokens for this user
+        await tx.refreshToken.updateMany({
+          where: { userId: storedToken.userId },
+          data: { revoked: true }
+        })
+        throw new Error('ACCOUNT_SUSPENDED')
       }
 
       // Token rotation: create new token

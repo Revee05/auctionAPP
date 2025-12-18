@@ -16,6 +16,17 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, user } = useAuth();
 
+  // Check for suspended account message from sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const authError = sessionStorage.getItem('auth_error');
+      if (authError) {
+        setError(authError);
+        sessionStorage.removeItem('auth_error');
+      }
+    }
+  }, []);
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -55,6 +66,11 @@ export default function LoginPage() {
         if (errorMessage.includes("verify your email") || errorMessage.includes("EMAIL_NOT_VERIFIED")) {
           setShowResendLink(true);
         }
+        
+        // Don't show resend link for suspended/banned accounts
+        if (errorMessage.includes("suspended") || errorMessage.includes("banned")) {
+          setShowResendLink(false);
+        }
       }
     } catch (err) {
       const errorMessage = err.message || "An unexpected error occurred";
@@ -63,6 +79,11 @@ export default function LoginPage() {
       // Check if it's email not verified error
       if (err.code === "EMAIL_NOT_VERIFIED" || errorMessage.includes("verify your email")) {
         setShowResendLink(true);
+      }
+      
+      // Don't show resend link for suspended/banned accounts
+      if (errorMessage.includes("suspended") || errorMessage.includes("banned")) {
+        setShowResendLink(false);
       }
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 import { authService } from '../services/authService.js'
+import { prisma } from '../../lib/prisma.js'
 
 export async function authenticate(request, reply) {
   try {
@@ -18,6 +19,23 @@ export async function authenticate(request, reply) {
     }
 
     const decoded = authService.verifyToken(token)
+    
+    // Check user status in database - BLOCK suspended or banned users
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { status: true }
+    })
+
+    if (!user) {
+      return reply.status(401).send({ error: 'User not found' })
+    }
+
+    if (user.status === 'SUSPENDED' || user.status === 'BANNED') {
+      return reply.status(403).send({ 
+        error: 'Your account has been suspended or banned. Please contact support.',
+        code: 'ACCOUNT_SUSPENDED'
+      })
+    }
     
     request.user = decoded
   } catch (error) {

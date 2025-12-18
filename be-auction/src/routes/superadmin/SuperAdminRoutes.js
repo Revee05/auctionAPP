@@ -24,4 +24,10 @@ export async function superAdminUserRoutes(fastify, options) {
   
   // GET /api/superadmin/users - List all users
   fastify.get('/', superAdminUserController.list)
+  
+  // PUT /api/superadmin/users/:id/ban - Ban user
+  fastify.put('/:id/ban', superAdminUserController.banUser)
+  
+  // PUT /api/superadmin/users/:id/unban - Unban user
+  fastify.put('/:id/unban', superAdminUserController.unbanUser)
 }

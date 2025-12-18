@@ -133,9 +133,23 @@ export function AuthProvider({ children }) {
       router.push('/auth/login');
     };
 
+    const handleSuspended = (event) => {
+      setUser(null);
+      const message = event.detail?.message || 'Your account has been suspended or banned.';
+      // Store message in sessionStorage to show on login page
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('auth_error', message);
+      }
+      router.push('/auth/login');
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('auth:unauthorized', handleUnauthorized);
-      return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.addEventListener('auth:suspended', handleSuspended);
+      return () => {
+        window.removeEventListener('auth:unauthorized', handleUnauthorized);
+        window.removeEventListener('auth:suspended', handleSuspended);
+      };
     }
   }, [router]);
 

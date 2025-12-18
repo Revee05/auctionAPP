@@ -95,6 +95,13 @@ export const authController = {
           code: "EMAIL_NOT_VERIFIED"
         });
       }
+      // Handle suspended/banned account error
+      if (error.message === 'ACCOUNT_SUSPENDED') {
+        return reply.status(403).send({ 
+          error: "Your account has been suspended or banned. Please contact support.",
+          code: "ACCOUNT_SUSPENDED"
+        });
+      }
       return reply.status(401).send({ error: error.message });
     }
   },
@@ -140,6 +147,15 @@ export const authController = {
       // Clear cookies on reuse detection or other errors
       reply.clearCookie(tokenHelper.ACCESS_COOKIE_NAME, { path: "/" });
       reply.clearCookie(tokenHelper.REFRESH_COOKIE_NAME, { path: "/" });
+      
+      // Handle suspended/banned account error
+      if (error.message === 'ACCOUNT_SUSPENDED') {
+        return reply.status(403).send({ 
+          error: "Your account has been suspended or banned. Please contact support.",
+          code: "ACCOUNT_SUSPENDED"
+        });
+      }
+      
       return reply.status(401).send({ error: error.message });
     }
   },
