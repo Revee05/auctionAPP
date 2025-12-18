@@ -232,9 +232,9 @@ export const authController = {
         });
       }
 
-      const { name, avatarUrl } = validation.data;
+      const { name, avatarUrl, language } = validation.data;
 
-      const user = await authService.updateProfile(userId, { name, avatarUrl })
+      const user = await authService.updateProfile(userId, { name, avatarUrl, language })
 
       return reply.send({ message: 'Profile updated successfully', user })
     } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 import { authService } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -12,6 +13,7 @@ export default function VerifyEmailPage() {
   const [email, setEmail] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
 
   // verifyEmail is executed inside the effect to avoid missing dependency warnings
 
@@ -70,8 +72,8 @@ export default function VerifyEmailPage() {
             <div className="mb-6">
               <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-400"></div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Verifying Email</h1>
-            <p className="text-zinc-400">Please wait while we verify your email address...</p>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('verifying_email')}</h1>
+            <p className="text-zinc-400">{t('verifying_wait')}</p>
           </>
         )}
 
@@ -84,17 +86,17 @@ export default function VerifyEmailPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Verify Your Email</h1>
-            <p className="text-zinc-400 mb-6">{message}</p>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('verify_your_email')}</h1>
+            <p className="text-zinc-400 mb-6">{message || t('verification_sent')}</p>
             {email && (
-              <p className="text-zinc-500 text-sm mb-6">Sent to: {email}</p>
+              <p className="text-zinc-500 text-sm mb-6">{t('sent_to')} {email}</p>
             )}
             <div className="space-y-3">
               <Link href={`/auth/resend-verification?email=${encodeURIComponent(email || "")}`}>
                 <Button
                   className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
                 >
-                  Resend Verification Email
+                  {t('resend_verification_email')}
                 </Button>
               </Link>
               <Link href="/auth/login">
@@ -102,7 +104,7 @@ export default function VerifyEmailPage() {
                   variant="outline"
                   className="w-full border-zinc-700 text-zinc-400 hover:bg-zinc-800"
                 >
-                  Back to Login
+                  {t('back_to_login')}
                 </Button>
               </Link>
             </div>
@@ -118,16 +120,16 @@ export default function VerifyEmailPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Email Verified!</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('email_verified')}</h1>
             <p className="text-zinc-400 mb-6">{message}</p>
             {email && (
-              <p className="text-zinc-500 text-sm mb-6">Verified: {email}</p>
+              <p className="text-zinc-500 text-sm mb-6">{t('verified')} {email}</p>
             )}
             <Button
               onClick={() => router.push("/auth/login")}
               className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
             >
-              Continue to Login
+              {t('continue_to_login')}
             </Button>
           </>
         )}
@@ -141,14 +143,14 @@ export default function VerifyEmailPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Verification Failed</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">{t('verification_failed')}</h1>
             <p className="text-zinc-400 mb-6">{message}</p>
             <div className="space-y-3">
               <Link href="/auth/resend-verification">
                 <Button
                   className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
                 >
-                  Resend Verification Email
+                  {t('resend_verification_email')}
                 </Button>
               </Link>
               <Link href="/auth/login">
@@ -156,7 +158,7 @@ export default function VerifyEmailPage() {
                   variant="outline"
                   className="w-full border-zinc-700 text-zinc-400 hover:bg-zinc-800"
                 >
-                  Back to Login
+                  {t('back_to_login')}
                 </Button>
               </Link>
             </div>

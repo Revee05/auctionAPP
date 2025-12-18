@@ -22,10 +22,10 @@ enum UserStatus {
 }
 
 model Role {
-  id        Int       @id @default(autoincrement())
-  name      RoleName  @unique
+  id        Int        @id @default(autoincrement())
+  name      RoleName   @unique
   users     UserRole[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
 }
 
 model User {
@@ -37,33 +37,35 @@ model User {
   verificationToken       String?        @unique
   verificationTokenHash   String?        @unique
   verificationTokenExpiry DateTime?
-  pendingEmail            String?        // New email waiting for verification
+  pendingEmail            String? // New email waiting for verification
   registrationIp          String?
   verificationIp          String?
   roles                   UserRole[]
   refreshTokens           RefreshToken[]
   status                  UserStatus     @default(ACTIVE)
+  avatarUrl               String?
+  language                String         @default("en") // 'en' or 'id'
   createdAt               DateTime       @default(now())
   updatedAt               DateTime       @updatedAt
-  
+
   @@index([verificationTokenHash])
 }
 
 model RefreshToken {
-  id         Int       @id @default(autoincrement())
-  token      String?   @unique  // Legacy field, will be deprecated
-  tokenHash  String?   @unique  // New hashed token field
-  userId     Int
-  expiresAt  DateTime
-  createdAt  DateTime  @default(now())
-  lastUsedAt DateTime?
-  revoked    Boolean   @default(false)
-  deviceInfo String?
-  ip         String?
-  hashVersion Int      @default(1)
-  
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id          Int       @id @default(autoincrement())
+  token       String?   @unique // Legacy field, will be deprecated
+  tokenHash   String?   @unique // New hashed token field
+  userId      Int
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revoked     Boolean   @default(false)
+  deviceInfo  String?
+  ip          String?
+  hashVersion Int       @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, revoked, expiresAt])
   @@index([tokenHash])
   @@index([token])
@@ -74,8 +76,8 @@ model UserRole {
   roleId     Int
   assignedAt DateTime @default(now())
 
-  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role       Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }

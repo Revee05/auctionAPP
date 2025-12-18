@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -20,16 +21,26 @@ export default function ProfilePage() {
 
 function ProfileContent() {
   const { user, logout, logoutAll, refreshUser } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   
   // Form states
   const [editingProfile, setEditingProfile] = useState(false);
   const [changingEmail, setChangingEmail] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   
+  // Initialize form with current language from context or user
   const [profileForm, setProfileForm] = useState({
     name: user?.name || "",
-    avatarUrl: user?.avatarUrl || ""
+    avatarUrl: user?.avatarUrl || "",
+    language: language || "en"
   });
+  
+  // Sync form language when context language changes (if not editing)
+  React.useEffect(() => {
+    if (!editingProfile) {
+      setProfileForm(prev => ({ ...prev, language }));
+    }
+  }, [language, editingProfile]);
   
   const [emailForm, setEmailForm] = useState({
     newEmail: "",
@@ -46,7 +57,7 @@ function ProfileContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Update profile (name, avatar)
+  // Update profile (name, avatar, language)
   const saveProfile = async () => {
     if (!user) return;
     
@@ -58,23 +69,33 @@ function ProfileContent() {
       await authService.updateProfile({
         name: profileForm.name,
         avatarUrl: profileForm.avatarUrl,
+        language: profileForm.language
       });
 
+      // Refresh user will update AuthContext -> updates LanguageContext
       await refreshUser();
       
-      setSuccess("Profile updated successfully!");
+      setSuccess(t('profile_success_update'));
       setEditingProfile(false);
     } catch (err) {
-      setError(err?.message || "Failed to update profile");
+      setError(err?.message || t('profile_error_update'));
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Language Change
+  // Updates local form AND context for immediate preview
+  const handleLanguageChange = (e) => {
+    const newLang = e.target.value;
+    setProfileForm({ ...profileForm, language: newLang });
+    setLanguage(newLang); // Instant preview
+  };
+
   // Request email change
   const requestEmailChange = async () => {
     if (!emailForm.newEmail || !emailForm.password) {
-      setError("Please fill in all fields");
+      setError(t('error_fill_fields'));
       return;
     }
     
@@ -84,7 +105,7 @@ function ProfileContent() {
 
     try {
       const result = await authService.changeEmail(emailForm.newEmail, emailForm.password);
-      setSuccess(result.message || "Verification email sent! Please check your new email inbox.");
+      setSuccess(result.message || t('email_success_sent'));
       setEmailForm({ newEmail: "", password: "" });
       setChangingEmail(false);
     } catch (err) {
@@ -97,12 +118,12 @@ function ProfileContent() {
   // Change password
   const updatePassword = async () => {
     if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      setError("Please fill in all fields");
+      setError(t('error_fill_fields'));
       return;
     }
     
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError("New passwords do not match");
+      setError(t('password_mismatch'));
       return;
     }
     
@@ -115,7 +136,7 @@ function ProfileContent() {
         passwordForm.currentPassword, 
         passwordForm.newPassword
       );
-      setSuccess(result.message || "Password changed successfully!");
+      setSuccess(result.message || t('password_success'));
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setChangingPassword(false);
     } catch (err) {
@@ -126,7 +147,7 @@ function ProfileContent() {
   };
 
   const handleLogoutAll = async () => {
-    if (confirm("Are you sure you want to logout from all devices?")) {
+    if (confirm(t('security_confirm_logout'))) {
       await logoutAll();
     }
   };
@@ -135,7 +156,19 @@ function ProfileContent() {
     setEditingProfile(false);
     setChangingEmail(false);
     setChangingPassword(false);
-    setProfileForm({ name: user?.name || "", avatarUrl: user?.avatarUrl || "" });
+    // Reset form to current user values
+    setProfileForm({ 
+      name: user?.name || "", 
+      avatarUrl: user?.avatarUrl || "",
+      language: language 
+    });
+    // Revert language context if changed but not saved? 
+    // Actually standard behavior is "Preview" stays if simpler, 
+    // but to be strict "Cancel" should revert.
+    if (user?.language && user.language !== language) {
+        setLanguage(user.language);
+    }
+
     setEmailForm({ newEmail: "", password: "" });
     setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     setError("");
@@ -145,10 +178,10 @@ function ProfileContent() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Profile Settings</h1>
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('profile_title')}</h1>
         <Button variant="outline" onClick={logout} className="gap-2">
           <LogOut className="w-4 h-4" />
-          Logout
+          {t('logout')}
         </Button>
       </div>
 
@@ -188,7 +221,7 @@ function ProfileContent() {
                 ) : (
                   <>
                     <div className="text-xl font-semibold text-zinc-900 dark:text-white">{user?.name}</div>
-                    <div className="text-sm text-zinc-500 mt-1">Name</div>
+                    <div className="text-sm text-zinc-500 mt-1">{t('profile_name')}</div>
                   </>
                 )}
               </div>
@@ -198,7 +231,7 @@ function ProfileContent() {
               <Mail className="w-5 h-5 text-zinc-500" />
               <div className="flex-1">
                 <div className="text-lg text-zinc-700 dark:text-zinc-300">{user?.email}</div>
-                <div className="text-sm text-zinc-500 mt-1">Email Address</div>
+                <div className="text-sm text-zinc-500 mt-1">{t('profile_email')}</div>
               </div>
             </div>
 
@@ -215,14 +248,38 @@ function ProfileContent() {
                     </span>
                   ))}
                 </div>
-                <div className="text-sm text-zinc-500 mt-1">Role</div>
+                <div className="text-sm text-zinc-500 mt-1">{t('profile_role')}</div>
               </div>
+            </div>
+
+            {/* Language Selector */}
+            <div className="flex items-center gap-2">
+                <div className="w-5 h-5 flex items-center justify-center text-zinc-500">🌐</div>
+                <div className="flex-1">
+                    {editingProfile ? (
+                        <select
+                            value={profileForm.language}
+                            onChange={handleLanguageChange}
+                            className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none max-w-md w-full"
+                        >
+                            <option value="en">English (US)</option>
+                            <option value="id">Bahasa Indonesia</option>
+                        </select>
+                    ) : (
+                        <>
+                            <div className="text-lg text-zinc-700 dark:text-zinc-300">
+                                {language === 'id' ? 'Bahasa Indonesia' : 'English (US)'}
+                            </div>
+                            <div className="text-sm text-zinc-500 mt-1">{t('profile_language')}</div>
+                        </>
+                    )}
+                </div>
             </div>
 
             {editingProfile && (
               <div className="pt-2">
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                  Avatar URL (optional)
+                  {t('profile_avatar_url')}
                 </label>
                 <Input
                   value={profileForm.avatarUrl}
@@ -237,15 +294,15 @@ function ProfileContent() {
               {editingProfile ? (
                 <>
                   <Button onClick={saveProfile} disabled={loading} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
-                    {loading ? "Saving..." : "Save Changes"}
+                    {loading ? "Saving..." : t('profile_save_btn')}
                   </Button>
                   <Button variant="outline" onClick={cancelAll} disabled={loading} className="w-full sm:w-auto">
-                    Cancel
+                    {t('profile_cancel_btn')}
                   </Button>
                 </>
               ) : (
                 <Button onClick={() => { cancelAll(); setEditingProfile(true); }} className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
-                  Edit Profile
+                  {t('profile_edit_btn')}
                 </Button>
               )}
             </div>
@@ -257,14 +314,14 @@ function ProfileContent() {
       <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-6">
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
           <Mail className="w-5 h-5" />
-          Change Email Address
+          {t('email_change_title')}
         </h3>
         
         {changingEmail ? (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                New Email Address
+                {t('email_new_label')}
               </label>
               <Input
                 type="email"
@@ -276,7 +333,7 @@ function ProfileContent() {
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Current Password (for verification)
+                {t('email_password_label')}
               </label>
               <Input
                 type="password"
@@ -287,24 +344,24 @@ function ProfileContent() {
               />
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded text-sm text-blue-800 dark:text-blue-200">
-              📧 A verification link will be sent to your new email address. You&apos;ll need to verify it before the change takes effect.
+              📧 {t('email_verify_info')}
             </div>
             <div className="flex gap-2">
               <Button onClick={requestEmailChange} disabled={loading} className="bg-purple-600 hover:bg-purple-700">
-                {loading ? "Sending..." : "Send Verification Email"}
+                {loading ? t('email_sending_btn') : t('email_send_btn')}
               </Button>
               <Button variant="outline" onClick={cancelAll} disabled={loading}>
-                Cancel
+                {t('cancel')}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Current email: <span className="font-medium text-zinc-900 dark:text-white">{user?.email}</span>
+              {t('email_current')}: <span className="font-medium text-zinc-900 dark:text-white">{user?.email}</span>
             </p>
             <Button onClick={() => { cancelAll(); setChangingEmail(true); }} variant="outline">
-              Request Email Change
+              {t('email_request_btn')}
             </Button>
           </div>
         )}
@@ -314,14 +371,14 @@ function ProfileContent() {
       <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-6">
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
           <Lock className="w-5 h-5" />
-          Change Password
+          {t('password_change_title')}
         </h3>
         
         {changingPassword ? (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Current Password
+                {t('password_current')}
               </label>
               <Input
                 type="password"
@@ -333,7 +390,7 @@ function ProfileContent() {
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                New Password
+                {t('password_new')}
               </label>
               <Input
                 type="password"
@@ -343,12 +400,12 @@ function ProfileContent() {
                 className="max-w-md"
               />
               <p className="text-xs text-zinc-500 mt-1">
-                Must be at least 8 characters with uppercase, lowercase, number, and special character
+                {t('password_hint')}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Confirm New Password
+                {t('password_confirm')}
               </label>
               <Input
                 type="password"
@@ -360,20 +417,20 @@ function ProfileContent() {
             </div>
             <div className="flex gap-2">
               <Button onClick={updatePassword} disabled={loading} className="bg-purple-600 hover:bg-purple-700">
-                {loading ? "Updating..." : "Update Password"}
+                {loading ? t('password_updating_btn') : t('password_update_btn')}
               </Button>
               <Button variant="outline" onClick={cancelAll} disabled={loading}>
-                Cancel
+                {t('cancel')}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Keep your account secure by using a strong password
+              {t('password_info')}
             </p>
             <Button onClick={() => { cancelAll(); setChangingPassword(true); }} variant="outline">
-              Change Password
+              {t('password_change_btn')}
             </Button>
           </div>
         )}
@@ -382,17 +439,17 @@ function ProfileContent() {
       {/* Security Actions */}
       <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-6">
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-          Security Actions
+          {t('security_title')}
         </h3>
         <Button 
           variant="destructive" 
           onClick={handleLogoutAll}
           className="w-full sm:w-auto"
         >
-          Logout from All Devices
+          {t('security_logout_all')}
         </Button>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
-          This will end all active sessions on all devices
+          {t('security_logout_all_info')}
         </p>
       </Card>
     </div>

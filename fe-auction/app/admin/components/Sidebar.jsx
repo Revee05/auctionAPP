@@ -1,29 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Users, LayoutDashboard, Menu, X } from "lucide-react";
 
-const menuItems = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    id: "users",
-    label: "User Management",
-    icon: Users,
-  },
-];
-
 function SidebarContent({ activeTab, onTabClick }) {
+  const { t } = useLanguage();
+  
+  const menuItems = [
+    {
+      id: "dashboard",
+      label: t('dashboard'),
+      icon: LayoutDashboard,
+    },
+    {
+      id: "users",
+      label: t('user_management'),
+      icon: Users,
+    },
+  ];
   return (
     <div className="flex flex-col h-full bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
       {/* Logo / Header */}
       <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Admin Panel</h2>
-        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">Auction Management</p>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{t('admin_panel')}</h2>
+        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">{t('auction_management')}</p>
       </div>
 
       {/* Navigation Menu */}
@@ -56,7 +58,7 @@ function SidebarContent({ activeTab, onTabClick }) {
       {/* Footer */}
       <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
         <div className="text-xs text-zinc-600 dark:text-zinc-400">
-          <p>Version 1.0.0</p>
+          <p>{t('version')} 1.0.0</p>
           <p className="mt-1">© 2024 Auction App</p>
         </div>
       </div>

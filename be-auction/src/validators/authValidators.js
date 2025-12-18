@@ -90,7 +90,8 @@ export const updateProfileSchema = z.object({
     .url('Avatar URL must be a valid URL')
     .max(500, 'Avatar URL too long')
     .optional()
-    .or(z.literal('')) // Allow empty string to remove avatar
+    .or(z.literal('')), // Allow empty string to remove avatar
+  language: z.enum(['en', 'id']).optional()
 });
 
 /* ============================================

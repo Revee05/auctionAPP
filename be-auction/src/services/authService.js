@@ -137,6 +137,7 @@ export const authService = {
         id: user.id,
         name: user.name,
         email: user.email,
+        language: user.language,
         roles
       }
     }
@@ -259,6 +260,7 @@ export const authService = {
           id: storedToken.user.id,
           name: storedToken.user.name,
           email: storedToken.user.email,
+          language: storedToken.user.language,
           roles
         }
       }
@@ -328,6 +330,7 @@ export const authService = {
       id: user.id,
       name: user.name,
       email: user.email,
+      language: user.language,
       roles: user.roles.map(ur => ur.role.name),
     }
   },
@@ -495,11 +498,12 @@ export const authService = {
   // UPDATE PROFILE - Update current user's profile
   // ============================================
   async updateProfile(userId, data) {
-    const { name, avatarUrl } = data || {}
+    const { name, avatarUrl, language } = data || {}
 
     const updateData = {}
     if (name !== undefined) updateData.name = name
     if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
+    if (language !== undefined) updateData.language = language
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -515,6 +519,7 @@ export const authService = {
       id: user.id,
       name: user.name,
       email: user.email,
+      language: user.language,
       roles: user.roles.map(ur => ur.role.name)
     }
   },

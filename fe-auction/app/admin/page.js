@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import useTheme from "@/hooks/useTheme";
 import { SunMoon, LogOut as LogOutIcon } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -26,6 +27,7 @@ export default function AdminPage() {
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { t } = useLanguage();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -55,10 +57,10 @@ function AdminDashboard() {
               <div className="lg:hidden w-10"></div>
               <div>
                 <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {activeTab === "dashboard" ? "Dashboard" : "User Management"}
+                  {activeTab === "dashboard" ? t('dashboard') : t('user_management')}
                 </h1>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-                  Logged in as {user?.email}
+                  {t('logged_in_as')} {user?.email}
                 </p>
               </div>
             </div>
@@ -69,7 +71,7 @@ function AdminDashboard() {
                 className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white text-sm font-medium"
               >
                 <LogOutIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">{t('logout')}</span>
               </button>
             </div>
           </div>

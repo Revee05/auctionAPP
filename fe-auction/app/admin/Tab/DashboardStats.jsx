@@ -101,7 +101,7 @@ export default function DashboardStats() {
 
       {/* Super Admin Alert */}
       {hasRole && (
-        <Card className="bg-gradient-to-r from-purple-900/40 to-purple-600/20 border-purple-500 p-4">
+        <Card className="bg-linear-to-r from-purple-900/40 to-purple-600/20 border-purple-500 p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-600 rounded-lg">
               <TrendingUp className="w-5 h-5 text-white" />

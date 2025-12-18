@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { authService } from "@/lib/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -69,8 +71,8 @@ export default function RegisterPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="w-full max-w-md p-8 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-white text-center mb-2">Create Account</h1>
-        <p className="text-zinc-400 text-center mb-6">Join our art community</p>
+        <h1 className="text-3xl font-bold text-white text-center mb-2">{t('register_title')}</h1>
+        <p className="text-zinc-400 text-center mb-6">{t('register_subtitle')}</p>
 
         {error && (
           <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-2 rounded mb-4">
@@ -82,7 +84,7 @@ export default function RegisterPage() {
           <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-3 rounded mb-4">
             <p className="font-semibold">{success}</p>
             <p className="text-sm mt-2 text-green-300">
-              Check your inbox and click the verification link before logging in.
+              {t('check_inbox')}
             </p>
             <div className="mt-3">
               <Link href="/auth/login">
@@ -90,7 +92,7 @@ export default function RegisterPage() {
                   variant="outline"
                   className="w-full border-green-700 text-green-400 hover:bg-green-900/30"
                 >
-                  Go to Login
+                  {t('go_to_login')}
                 </Button>
               </Link>
             </div>
@@ -109,7 +111,7 @@ export default function RegisterPage() {
                   : "bg-zinc-800 text-zinc-400 border border-zinc-700"
               }`}
             >
-              As Collector
+              {t('as_collector')}
             </Button>
             <Button
               type="button"
@@ -120,26 +122,26 @@ export default function RegisterPage() {
                   : "bg-zinc-800 text-zinc-400 border border-zinc-700"
               }`}
             >
-              As Artist
+              {t('as_artist')}
             </Button>
           </div>
 
           <div>
             <label className="block text-white font-semibold mb-2">
-              {selectedRole === "ARTIST" ? "Artist Name" : "Full Name"}
+              {selectedRole === "ARTIST" ? t('artist_name') : t('full_name')}
             </label>
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={selectedRole === "ARTIST" ? "Your artist name" : "John Doe"}
+              placeholder={selectedRole === "ARTIST" ? t('your_artist_name') : "John Doe"}
               className="text-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-white font-semibold mb-2">Email</label>
+            <label className="block text-white font-semibold mb-2">{t('email')}</label>
             <Input
               type="email"
               value={email}
@@ -151,7 +153,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-white font-semibold mb-2">Password</label>
+            <label className="block text-white font-semibold mb-2">{t('password')}</label>
             <Input
               type="password"
               value={password}
@@ -161,7 +163,7 @@ export default function RegisterPage() {
               required
             />
             <p className="text-xs text-zinc-400 mt-1">
-              Must be 8+ characters with uppercase, lowercase, number, and special character
+              {t('password_requirements')}
             </p>
           </div>
 
@@ -170,14 +172,14 @@ export default function RegisterPage() {
             className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
             disabled={loading || !!success}
           >
-            {loading ? "Creating account..." : `Register as ${selectedRole === "ARTIST" ? "Artist" : "Collector"}`}
+            {loading ? t('creating_account') : `${t('register_as')} ${selectedRole === "ARTIST" ? t('as_artist').replace('Sebagai ', '').replace('As ', '') : t('as_collector').replace('Sebagai ', '').replace('As ', '')}`}
           </Button>
         </form>
 
         <p className="text-zinc-400 text-center mt-6">
-          Already have an account?{" "}
+          {t('already_have_account')}{" "}
           <Link href="/auth/login" className="text-purple-400 hover:underline">
-            Login here
+            {t('login_here')}
           </Link>
         </p>
       </div>

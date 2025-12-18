@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated, user } = useAuth();
+  const { t } = useLanguage();
 
   // Check for suspended account message from sessionStorage
   useEffect(() => {
@@ -106,8 +108,8 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
       <div className="w-full max-w-md p-8 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-white text-center mb-2">Welcome Back</h1>
-        <p className="text-zinc-400 text-center mb-6">Login to your account</p>
+        <h1 className="text-3xl font-bold text-white text-center mb-2">{t('login_title')}</h1>
+        <p className="text-zinc-400 text-center mb-6">{t('login_subtitle')}</p>
 
         {successMessage && (
           <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-2 rounded mb-4">
@@ -124,7 +126,7 @@ export default function LoginPage() {
                   href={`/auth/resend-verification?email=${encodeURIComponent(email)}`}
                   className="text-purple-400 hover:underline font-semibold"
                 >
-                  Resend verification email
+                  {t('resend_verification')}
                 </Link>
               </p>
             )}
@@ -133,7 +135,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-white font-semibold mb-2">Email</label>
+            <label className="block text-white font-semibold mb-2">{t('email')}</label>
             <Input
               type="email"
               value={email}
@@ -144,7 +146,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-white font-semibold mb-2">Password</label>
+            <label className="block text-white font-semibold mb-2">{t('password')}</label>
             <Input
               type="password"
               value={password}
@@ -159,14 +161,14 @@ export default function LoginPage() {
             className="w-full bg-purple-400 hover:bg-purple-500 text-black font-semibold"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? t('logging_in') : t('login')}
           </Button>
         </form>
 
         <p className="text-zinc-400 text-center mt-6">
-          Don&apos;t have an account?{" "}
+          {t('dont_have_account')}{" "}
           <Link href="/auth/register" className="text-purple-400 hover:underline">
-            Register here
+            {t('register_here')}
           </Link>
         </p>
       </div>
